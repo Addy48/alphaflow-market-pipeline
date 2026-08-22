@@ -1,0 +1,60 @@
+name: AlphaFlow Automated ETL Engine
+
+on:
+  schedule:
+    # 12:30 UTC = 18:00 IST (Indian Market Close - Nifty 50)
+    - cron: '30 12 * * 1-5'
+    # 21:30 UTC = 17:30 EST (US Market Close - S&P 500)
+    - cron: '30 21 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      exchange:
+        description: 'Target Exchange (all, S&P 500, Nifty 50)'
+        required: true
+        default: 'all'
+
+jobs:
+  run-pipeline:
+    name: Execute Quantitative Ingestion & Quality Gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Configure AWS Credentials (Optional)
+        uses: aws-actions/configure-aws-credentials@v4
+        if: env.AWS_ACCESS_KEY_ID != ''
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+      - name: Execute Dual-Market Pipeline
+        env:
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME || 'alphaflow-market-data-lake' }}
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+        run: |
+          python run_pipeline.py --exchange "${{ github.event.inputs.exchange || 'all' }}"
+
+      - name: Archive Observability Logs & Run Telemetry
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pipeline-telemetry
+          path: |
+            logs/
+            data/gold/
+          retention-days: 7
