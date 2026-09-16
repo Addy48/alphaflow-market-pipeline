@@ -7,7 +7,7 @@ import pandas as pd
 import boto3
 from botocore.exceptions import ClientError
 
-from src.config import BASE_DIR, AWS_REGION, S3_BUCKET_NAME
+from src.config import BASE_DIR, AWS_REGION, S3_BUCKET_NAME, ENABLE_AWS
 
 logger = logging.getLogger("alphaflow.load")
 
@@ -36,6 +36,10 @@ def upload_bronze(
         df.to_parquet(local_file, index=False, engine="pyarrow")
         logger.info(f"Persisted Bronze tier locally to {local_file}")
 
+        if s3_client is None and not ENABLE_AWS:
+            logger.info(f"[CREDIT SHIELD: ACTIVE] S3 upload skipped (AWS mode is OFF). Local copy preserved at {local_file}.")
+            return True
+
         client = s3_client or get_s3_client()
         s3_key = f"bronze/run_id={run_id}/data.parquet"
         client.upload_file(str(local_file), bucket_name, s3_key)
@@ -63,6 +67,10 @@ def upload_silver(
     try:
         df.to_parquet(local_file, index=False, engine="pyarrow")
         logger.info(f"Persisted Silver tier locally to {local_file}")
+
+        if s3_client is None and not ENABLE_AWS:
+            logger.info(f"[CREDIT SHIELD: ACTIVE] S3 upload skipped (AWS mode is OFF). Local copy preserved at {local_file}.")
+            return True
 
         client = s3_client or get_s3_client()
         s3_key = f"silver/run_id={run_id}/data.parquet"
@@ -96,8 +104,6 @@ def upload_gold(
     temp_df["year"] = temp_df["Date"].dt.year
     temp_df["month"] = temp_df["Date"].dt.month.map(lambda m: f"{m:02d}")
 
-    client = s3_client or get_s3_client()
-
     try:
         # Save partitioned dataset locally
         temp_df.to_parquet(
@@ -107,6 +113,12 @@ def upload_gold(
             engine="pyarrow"
         )
         logger.info(f"Persisted Gold analytics partitions locally under {gold_base}")
+
+        if s3_client is None and not ENABLE_AWS:
+            logger.info("[CREDIT SHIELD: ACTIVE] Gold S3 upload skipped (AWS mode is OFF). Local partitioned parquet preserved.")
+            return True
+
+        client = s3_client or get_s3_client()
 
         # Upload partitioned files to S3
         for root, _, files in os.walk(gold_base):
@@ -137,6 +149,10 @@ def upload_telemetry(
     local_file = BASE_DIR / "logs/run_telemetry.json"
     if not local_file.exists():
         return False
+
+    if s3_client is None and not ENABLE_AWS:
+        logger.info("[CREDIT SHIELD: ACTIVE] Telemetry S3 upload skipped (AWS mode is OFF). Local telemetry preserved.")
+        return True
 
     try:
         client = s3_client or get_s3_client()

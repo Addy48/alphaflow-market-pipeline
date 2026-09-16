@@ -2,6 +2,8 @@ import logging
 from typing import Tuple, List, Optional
 import numpy as np
 import pandas as pd
+import os
+os.environ["DISABLE_PANDERA_IMPORT_WARNING"] = "True"
 import pandera as pa
 from pandera.typing import Series
 

@@ -132,8 +132,28 @@ def main():
         default=S3_BUCKET_NAME,
         help="Target S3 bucket name."
     )
+    parser.add_argument(
+        "--use-aws",
+        action="store_true",
+        default=False,
+        help="Enable live AWS S3 / DynamoDB / SNS streaming. Default is False (Credit Shield active, zero AWS billing)."
+    )
 
     args = parser.parse_args()
+
+    import os
+    if args.use_aws:
+        os.environ["ALPHAFLOW_ENABLE_AWS"] = "true"
+        logger.info("============================================================")
+        logger.info(" [AWS CLOUD MODE: ENABLED] Streaming to S3 & DynamoDB")
+        logger.info("============================================================")
+    else:
+        logger.info("============================================================")
+        logger.info(" [CREDIT SHIELD: ACTIVE] AWS is OFF (Zero AWS Cost)")
+        logger.info(" Data persisted locally to Parquet lakehouse in data/")
+        logger.info(" To stream to AWS, pass --use-aws")
+        logger.info("============================================================")
+
     run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     target_tickers = [t.strip() for t in args.tickers.split(",") if t.strip()] if args.tickers else None
 

@@ -38,10 +38,15 @@ def setup_logging(level: int = logging.INFO) -> logging.Logger:
 logger = setup_logging()
 
 # ---------------------------------------------------------
-# Environment and Cloud Configuration
+# Environment and Cloud Configuration (Credit Shield)
 # ---------------------------------------------------------
+# Default is False to guarantee zero unexpected cloud billing.
+# Turn ON via CLI flag (--use-aws) or env: ALPHAFLOW_ENABLE_AWS=true
+ENABLE_AWS = os.getenv("ALPHAFLOW_ENABLE_AWS", "false").strip().lower() in ("true", "1", "yes", "on")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "alphaflow-market-data-lake")
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+DYNAMODB_TABLE_NAME = os.getenv("DYNAMODB_TABLE_NAME", "alphaflow_factor_state")
+SNS_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN", "")
 ATHENA_DATABASE = os.getenv("ATHENA_DATABASE", "alphaflow_analytics")
 ATHENA_WORKGROUP = os.getenv("ATHENA_WORKGROUP", "primary")
 

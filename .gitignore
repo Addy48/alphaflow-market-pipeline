@@ -63,3 +63,11 @@ logs/metrics_*.json
 *.tfstate.*
 .terraform/
 .terraform.lock.hcl
+
+# Web Node & Next.js
+web/node_modules/
+web/.next/
+web/.vercel/
+web/out/
+web/*.tsbuildinfo
+

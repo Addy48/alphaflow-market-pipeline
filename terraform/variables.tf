@@ -4,6 +4,12 @@ variable "aws_region" {
   description = "AWS deployment region."
 }
 
+variable "project_name" {
+  type        = string
+  default     = "alphaflow"
+  description = "Project name prefix for resources."
+}
+
 variable "bucket_name" {
   type        = string
   default     = "alphaflow-market-data-lake"
@@ -20,4 +26,28 @@ variable "environment" {
   type        = string
   default     = "production"
   description = "Deployment environment tag."
+}
+
+variable "table_name" {
+  type        = string
+  default     = "alphaflow_factor_state"
+  description = "DynamoDB table for serverless factor state tracking and 90-day TTL."
+}
+
+variable "sns_topic_name" {
+  type        = string
+  default     = "alphaflow-factor-alerts"
+  description = "SNS topic name for quantitative factor breakout alerts."
+}
+
+variable "alert_email" {
+  type        = string
+  default     = "alerts@aiimin.in"
+  description = "Target email address for SNS subscription."
+}
+
+variable "lambda_function_name" {
+  type        = string
+  default     = "alphaflow-serverless-sentinel"
+  description = "Name of the serverless alert Lambda function."
 }
