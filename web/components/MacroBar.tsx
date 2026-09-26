@@ -10,7 +10,8 @@ import {
   ChartBar,
   ShareNetwork,
   Cpu,
-  SlidersHorizontal
+  SlidersHorizontal,
+  CirclesFour
 } from "@phosphor-icons/react";
 import { MarketBreadth } from "../types/market";
 import { playTick } from "../utils/audio";
@@ -30,6 +31,7 @@ export const MacroBar: React.FC<MacroBarProps> = ({
     { id: "screener", label: "Factor Screener", icon: SlidersHorizontal },
     { id: "charts", label: "Technical Workspace", icon: ChartBar },
     { id: "correlation", label: "Cross-Market Matrix", icon: ShareNetwork },
+    { id: "clusters", label: "K-Means Archetypes", icon: CirclesFour },
     { id: "lakehouse", label: "Lakehouse Observability", icon: Cpu },
   ];
 

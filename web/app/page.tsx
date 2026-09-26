@@ -8,9 +8,11 @@ import { MacroBar } from "../components/MacroBar";
 import { ScreenerTable } from "../components/ScreenerTable";
 import { CandleChart } from "../components/CandleChart";
 import { CorrelationMatrix } from "../components/CorrelationMatrix";
+import { KMeansClusters } from "../components/KMeansClusters";
 import { LakehouseTelemetry } from "../components/LakehouseTelemetry";
 import { CommandPalette } from "../components/CommandPalette";
 import { KeyboardShortcutsModal } from "../components/KeyboardShortcutsModal";
+import { InstitutionalReportModal } from "../components/InstitutionalReportModal";
 import { playTick } from "../utils/audio";
 
 export default function TerminalPage() {
@@ -19,6 +21,8 @@ export default function TerminalPage() {
   const [selectedSymbol, setSelectedSymbol] = useState<string>("NVDA");
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
+  const [isReportOpen, setIsReportOpen] = useState<boolean>(false);
+  const [selectedReportSymbol, setSelectedReportSymbol] = useState<string>("NVDA");
   const [refreshInterval, setRefreshInterval] = useState<number>(5);
   const [isDark, setIsDark] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<string>(
@@ -63,6 +67,7 @@ export default function TerminalPage() {
         if (e.key === "Escape") {
           setIsSearchOpen(false);
           setIsShortcutsOpen(false);
+          setIsReportOpen(false);
         }
         return;
       }
@@ -77,6 +82,7 @@ export default function TerminalPage() {
       if (e.key === "Escape") {
         setIsSearchOpen(false);
         setIsShortcutsOpen(false);
+        setIsReportOpen(false);
         return;
       }
 
@@ -95,7 +101,16 @@ export default function TerminalPage() {
       } else if (e.key === "4") {
         e.preventDefault();
         playTick("click");
+        setActiveTab("clusters");
+      } else if (e.key === "5") {
+        e.preventDefault();
+        playTick("click");
         setActiveTab("lakehouse");
+      } else if (e.key.toLowerCase() === "r") {
+        e.preventDefault();
+        playTick("click");
+        setSelectedReportSymbol(selectedSymbol);
+        setIsReportOpen(true);
       } else if (e.key.toLowerCase() === "t") {
         e.preventDefault();
         playTick("toggle");
@@ -113,7 +128,7 @@ export default function TerminalPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [selectedSymbol]);
 
   // Live Market Micro-Ticking Simulation when Live interval active
   useEffect(() => {
@@ -223,7 +238,7 @@ export default function TerminalPage() {
   };
 
   return (
-    <div className={`min-h-screen bg-[var(--canvas)] text-[var(--text-primary)] flex flex-col font-mono selection:bg-cyan-950 selection:text-cyan-300 transition-colors duration-200 ${isDark ? "dark" : ""}`}>
+    <div className={`min-h-screen bg-[var(--canvas)] text-[var(--text-primary)] flex flex-col font-mono selection:bg-[var(--accent-dim)] selection:text-[var(--text-primary)] transition-colors duration-200 ${isDark ? "dark" : ""}`}>
       {/* Top Fixed Header */}
       <Header
         benchmarks={data.macro.benchmarks}
@@ -232,6 +247,10 @@ export default function TerminalPage() {
         onSearchClick={() => setIsSearchOpen(true)}
         onExportJson={handleExportJson}
         onExportCsv={handleExportCsv}
+        onOpenReport={() => {
+          setSelectedReportSymbol(selectedSymbol);
+          setIsReportOpen(true);
+        }}
         refreshInterval={refreshInterval}
         setRefreshInterval={setRefreshInterval}
         lastUpdated={lastUpdated}
@@ -253,6 +272,10 @@ export default function TerminalPage() {
           <ScreenerTable
             symbols={data.symbols}
             onOpenChart={handleOpenChart}
+            onOpenReport={(sym) => {
+              setSelectedReportSymbol(sym);
+              setIsReportOpen(true);
+            }}
           />
         )}
 
@@ -266,6 +289,20 @@ export default function TerminalPage() {
 
         {activeTab === "correlation" && (
           <CorrelationMatrix matrix={data.correlation_matrix} />
+        )}
+
+        {activeTab === "clusters" && (
+          <KMeansClusters
+            symbols={data.symbols}
+            onSelectSymbol={(sym: string) => {
+              setSelectedSymbol(sym);
+              setActiveTab("charts");
+            }}
+            onOpenReport={(sym: string) => {
+              setSelectedReportSymbol(sym);
+              setIsReportOpen(true);
+            }}
+          />
         )}
 
         {activeTab === "lakehouse" && (
@@ -289,6 +326,14 @@ export default function TerminalPage() {
       <KeyboardShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      {/* Institutional Research Tear-Sheet Printable Modal */}
+      <InstitutionalReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        marketData={data}
+        selectedSymbol={selectedReportSymbol}
       />
 
       {/* Footer */}

@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   X, 
   Copy, 
   Check, 
   ChartBar,
-  TrendUp,
-  TrendDown
+  TrendUp, 
+  TrendDown,
+  FilePdf,
+  ShieldCheck
 } from "@phosphor-icons/react";
 import { SymbolData } from "../types/market";
 import { RadialGauge } from "./RadialGauge";
@@ -18,12 +20,14 @@ interface StockDossierProps {
   symbol: SymbolData;
   onClose: () => void;
   onOpenChart: (symbol: string) => void;
+  onOpenReport?: (symbol: string) => void;
 }
 
 export const StockDossier: React.FC<StockDossierProps> = ({
   symbol,
   onClose,
-  onOpenChart
+  onOpenChart,
+  onOpenReport,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -37,6 +41,27 @@ export const StockDossier: React.FC<StockDossierProps> = ({
       symbol.bollinger_pct_b * 15
     )
   );
+
+  // Dynamically evaluate regime matching true factor metrics
+  const derivedRegime = useMemo(() => {
+    if (alphaScore >= 75) return "STRONG MOMENTUM";
+    if (alphaScore >= 55) return "MODERATE EXPANSION";
+    if (alphaScore >= 40) return "CONSOLIDATION";
+    return "DEFENSIVE / OVERSOLD";
+  }, [alphaScore]);
+
+  const technicalInterpretation = useMemo(() => {
+    if (alphaScore >= 70) {
+      return "Strong momentum profile. Relative strength and positive Bollinger expansion indicate upside trend continuation with favorable Sharpe proxy.";
+    }
+    if (alphaScore >= 50) {
+      return "Constructive consolidation. Trading inside normal volatility bounds with balanced risk-reward dispersion.";
+    }
+    if (alphaScore >= 35) {
+      return "Defensive compression. Volatility contraction and neutral momentum indicate near-term range-bound price action.";
+    }
+    return "Oversold mean-reversion candidate. Depressed momentum and lower-envelope breach present tactical recovery potential with elevated drawdown risk.";
+  }, [alphaScore]);
 
   const isPos = symbol.change_1d >= 0;
   const currencySymbol = symbol.exchange === "NSE" ? "₹" : "$";
@@ -54,13 +79,13 @@ export const StockDossier: React.FC<StockDossierProps> = ({
       <div className="p-3 border-b border-[var(--divider)] bg-[var(--surface-subtle)] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-[var(--text-secondary)] text-xs uppercase tracking-wider">
-            Equity Detail
+            Equity Dossier
           </span>
           <span
-            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+            className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
               symbol.exchange === "NSE"
-                ? "bg-amber-950/50 text-amber-400 border border-amber-800/40"
-                : "bg-blue-950/50 text-blue-400 border border-blue-800/40"
+                ? "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50"
+                : "bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700"
             }`}
           >
             {symbol.exchange}
@@ -68,6 +93,15 @@ export const StockDossier: React.FC<StockDossierProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {onOpenReport && (
+            <button
+              onClick={() => onOpenReport(symbol.symbol)}
+              className="p-1.5 rounded hover:bg-[var(--surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition flex items-center gap-1"
+              title="Print / Save Tear-Sheet PDF"
+            >
+              <FilePdf size={14} weight="bold" />
+            </button>
+          )}
           <button
             onClick={handleCopy}
             className="p-1.5 rounded hover:bg-[var(--surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
@@ -108,10 +142,10 @@ export const StockDossier: React.FC<StockDossierProps> = ({
               {currencySymbol}{symbol.price.toFixed(2)}
             </div>
             <div
-              className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-bold tabular-nums mt-0.5 ${
+              className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-[11px] font-bold tabular-nums mt-0.5 border ${
                 isPos
-                  ? "bg-emerald-950/60 text-emerald-400 border border-emerald-800/50"
-                  : "bg-rose-950/60 text-rose-400 border border-rose-800/50"
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50"
+                  : "bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/50"
               }`}
             >
               {isPos ? <TrendUp size={12} weight="bold" /> : <TrendDown size={12} weight="bold" />}
@@ -133,7 +167,7 @@ export const StockDossier: React.FC<StockDossierProps> = ({
           <RadialGauge
             score={alphaScore}
             label="COMPOSITE SCORE"
-            sublabel={symbol.regime.replace(/_/g, " ")}
+            sublabel={derivedRegime}
             size={180}
           />
         </div>
@@ -152,7 +186,7 @@ export const StockDossier: React.FC<StockDossierProps> = ({
 
           <div className="p-2.5 rounded border border-[var(--divider)] bg-[var(--surface-subtle)]">
             <div className="text-[var(--text-muted)] text-[10px] uppercase font-semibold">Bollinger %B</div>
-            <div className="text-purple-400 font-bold tabular-nums text-sm mt-0.5">
+            <div className="text-[var(--text-primary)] font-bold tabular-nums text-sm mt-0.5">
               {symbol.bollinger_pct_b.toFixed(2)}
             </div>
             <div className="text-[9px] text-[var(--text-muted)] mt-0.5">
@@ -166,13 +200,13 @@ export const StockDossier: React.FC<StockDossierProps> = ({
               {symbol.volatility_30d.toFixed(1)}%
             </div>
             <div className="text-[9px] text-[var(--text-muted)] mt-0.5">
-              Annualized, 252-day basis
+              Annualized 252-day basis
             </div>
           </div>
 
           <div className="p-2.5 rounded border border-[var(--divider)] bg-[var(--surface-subtle)]">
             <div className="text-[var(--text-muted)] text-[10px] uppercase font-semibold">Sharpe Proxy</div>
-            <div className="text-emerald-400 font-bold tabular-nums text-sm mt-0.5">
+            <div className="text-[var(--text-primary)] font-bold tabular-nums text-sm mt-0.5">
               {symbol.sharpe_proxy.toFixed(2)}
             </div>
             <div className="text-[9px] text-[var(--text-muted)] mt-0.5">
@@ -198,53 +232,35 @@ export const StockDossier: React.FC<StockDossierProps> = ({
               {currencySymbol}{symbol.bollinger_lower.toFixed(2)}
             </span>
           </div>
-          <div className="flex justify-between text-[var(--text-secondary)] border-t border-[var(--divider)] pt-1">
-            <span>Bandwidth:</span>
-            <span className="text-purple-400 tabular-nums font-semibold">
-              {((symbol.bollinger_upper - symbol.bollinger_lower) / symbol.price * 100).toFixed(2)}%
-            </span>
-          </div>
-        </div>
-
-        {/* MACD */}
-        <div className="p-2.5 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] flex flex-col gap-1 text-[11px]">
-          <div className="text-[10px] text-[var(--text-muted)] uppercase font-semibold mb-0.5">
-            MACD (12, 26, 9)
-          </div>
           <div className="flex justify-between text-[var(--text-secondary)]">
-            <span>MACD:</span>
+            <span>20D Moving Avg:</span>
             <span className="text-[var(--text-primary)] tabular-nums font-semibold">
-              {symbol.macd.toFixed(3)}
-            </span>
-          </div>
-          <div className="flex justify-between text-[var(--text-secondary)]">
-            <span>Signal:</span>
-            <span className="text-amber-400 tabular-nums font-semibold">
-              {symbol.macd_signal.toFixed(3)}
-            </span>
-          </div>
-          <div className="flex justify-between text-[var(--text-secondary)] border-t border-[var(--divider)] pt-1">
-            <span>Histogram:</span>
-            <span
-              className={`font-bold tabular-nums ${
-                symbol.macd_hist >= 0 ? "text-emerald-400" : "text-rose-400"
-              }`}
-            >
-              {symbol.macd_hist > 0 ? "+" : ""}{symbol.macd_hist.toFixed(3)}
+              {currencySymbol}{((symbol.bollinger_upper + symbol.bollinger_lower) / 2).toFixed(2)}
             </span>
           </div>
         </div>
 
-        {/* Open Chart Button */}
+        {/* Regime Diagnostic Note */}
+        <div className="p-2.5 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] text-[11px] leading-relaxed">
+          <div className="text-[10px] text-[var(--text-muted)] uppercase font-semibold mb-1 flex items-center gap-1.5">
+            <ShieldCheck size={12} weight="bold" className="text-[var(--accent)]" />
+            <span>Technicals Regime Assessment</span>
+          </div>
+          <p className="text-[var(--text-secondary)] text-[10px]">
+            <strong className="text-[var(--text-primary)]">{derivedRegime}:</strong> {technicalInterpretation}
+          </p>
+        </div>
+
+        {/* Action Button */}
         <button
           onClick={() => {
-            playTick("blip");
+            playTick("click");
             onOpenChart(symbol.symbol);
           }}
-          className="w-full py-2 rounded bg-[var(--surface-raised)] border border-[var(--divider)] hover:border-[var(--accent)] text-[var(--text-primary)] hover:text-[var(--accent)] font-semibold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+          className="w-full py-2.5 rounded border border-[var(--divider-strong)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-primary)] font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs"
         >
           <ChartBar size={14} weight="bold" />
-          <span>Open Chart</span>
+          <span>Launch Full Technical Workspace</span>
         </button>
       </div>
     </div>

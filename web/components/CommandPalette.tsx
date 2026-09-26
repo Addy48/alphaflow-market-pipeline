@@ -8,7 +8,8 @@ import {
   SlidersHorizontal, 
   ChartBar, 
   ShareNetwork, 
-  Cpu 
+  Cpu,
+  CirclesFour
 } from "@phosphor-icons/react";
 import { SymbolData } from "../types/market";
 import { playTick } from "../utils/audio";
@@ -69,6 +70,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     { id: "screener", label: "Factor Screener & Data Grid", icon: SlidersHorizontal },
     { id: "charts", label: "Technical Workspace & Candlestick Charts", icon: ChartBar },
     { id: "correlation", label: "Cross-Market Correlation Matrix", icon: ShareNetwork },
+    { id: "clusters", label: "K-Means Factor Clustering Archetypes", icon: CirclesFour },
     { id: "lakehouse", label: "Medallion Lakehouse & Ingestion SLA", icon: Cpu },
   ].filter((v) => v.label.toLowerCase().includes(query.toLowerCase()));
 
@@ -77,7 +79,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       <div className="bg-[var(--surface)] border border-[var(--divider-strong)] rounded-lg w-full max-w-lg shadow-raised overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--divider)] bg-[var(--surface-subtle)]">
-          <MagnifyingGlass size={16} weight="bold" className="text-cyan-500" />
+          <MagnifyingGlass size={16} weight="bold" className="text-[var(--accent)]" />
           <input
             ref={inputRef}
             type="text"
@@ -117,7 +119,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     className="w-full flex items-center justify-between px-2.5 py-1.5 rounded hover:bg-[var(--surface-hover)] text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition btn-tactile cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <Icon size={14} weight="bold" className="text-cyan-500" />
+                      <Icon size={14} weight="bold" className="text-[var(--accent)]" />
                       <span>{v.label}</span>
                     </div>
                     <ArrowRight size={13} weight="bold" className="text-[var(--text-muted)]" />
@@ -149,7 +151,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   className="w-full flex items-center justify-between px-2.5 py-1.5 rounded hover:bg-[var(--surface-hover)] text-left transition group btn-tactile cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-[var(--text-primary)] group-hover:text-cyan-500 transition">
+                    <span className="font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition">
                       {s.symbol}
                     </span>
                     <span className="text-[10px] px-1 rounded bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-muted)]">

@@ -30,8 +30,8 @@ export const SignalMatrix: React.FC<SignalMatrixProps> = ({ symbol }) => {
           title={`${s.title}: ${s.active ? "Triggered (Active)" : "Neutral"}`}
           className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-colors select-none ${
             s.active
-              ? "bg-cyan-950/80 text-cyan-400 border border-cyan-700/60 shadow-xs"
-              : "bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-[var(--divider)]"
+              ? "bg-[var(--badge-active-bg)] text-[var(--badge-active-text)] border border-[var(--badge-active-border)] shadow-xs"
+              : "bg-[var(--badge-inactive-bg)] text-[var(--badge-inactive-text)] border border-[var(--badge-inactive-border)]"
           }`}
         >
           {s.code}

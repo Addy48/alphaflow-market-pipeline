@@ -219,7 +219,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({
                   }}
                   className={`px-2 py-0.5 rounded transition btn-tactile ${
                     timeframe === tf
-                      ? "bg-[var(--surface-raised)] text-cyan-500 font-bold shadow-xs"
+                      ? "bg-[var(--surface-raised)] text-[var(--accent)] font-bold shadow-xs"
                       : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
@@ -237,11 +237,11 @@ export const CandleChart: React.FC<CandleChartProps> = ({
                 }}
                 className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition btn-tactile ${
                   showMA20
-                    ? "border-cyan-500/50 bg-cyan-950/40 text-cyan-400 font-bold"
+                    ? "border-[var(--accent-border)] bg-[var(--accent-dim)] text-[var(--accent)] font-bold"
                     : "border-[var(--divider)] bg-[var(--surface)] text-[var(--text-muted)]"
                 }`}
               >
-                <span className="w-2 h-0.5 bg-cyan-400 inline-block"></span>
+                <span className="w-2 h-0.5 bg-[var(--accent)] inline-block"></span>
                 <span>MA20</span>
               </button>
 
@@ -307,8 +307,8 @@ export const CandleChart: React.FC<CandleChartProps> = ({
               }}
               className={`px-2 py-0.5 rounded text-[10px] font-mono whitespace-nowrap transition-all border btn-tactile ${
                 s.symbol === currentSymbol.symbol
-                  ? "bg-cyan-950/80 border-cyan-500 text-cyan-400 font-bold shadow-xs"
-                  : "bg-[var(--surface)] border-[var(--divider)] text-[var(--text-secondary)] hover:border-cyan-500/60 hover:text-cyan-300 hover:bg-cyan-950/20 hover:scale-[1.02]"
+                  ? "bg-[var(--accent)] border-[var(--accent)] text-white font-bold shadow-xs"
+                  : "bg-[var(--surface)] border-[var(--divider)] text-[var(--text-secondary)] hover:border-[var(--accent-border)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] hover:scale-[1.02]"
               }`}
             >
               {s.symbol}
@@ -357,7 +357,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({
                   </span>
                 </span>
                 {showMA20 && activeCandle.ma20 && (
-                  <span className="text-cyan-500 font-semibold">
+                  <span className="text-[var(--accent)] font-semibold">
                     MA20: {activeCandle.ma20}
                   </span>
                 )}
@@ -825,7 +825,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({
               </span>
             </div>
             <div className="w-full h-2 bg-[var(--surface-subtle)] rounded-full overflow-hidden flex border border-[var(--divider)]">
-              <div className="w-[30%] bg-cyan-900/40 border-r border-[var(--divider)]" title="Oversold (<30)" />
+              <div className="w-[30%] bg-[var(--accent-dim)] border-r border-[var(--divider)]" title="Oversold (<30)" />
               <div className="w-[40%] bg-[var(--surface)] border-r border-[var(--divider)]" title="Neutral (30-70)" />
               <div className="w-[30%] bg-rose-900/40" title="Overbought (>70)" />
             </div>
@@ -888,7 +888,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({
             </div>
             <div className="flex justify-between text-[var(--text-secondary)] pt-1 border-t border-[var(--divider)]">
               <span>Surge Ratio:</span>
-              <span className="text-cyan-500 font-bold">
+              <span className="text-[var(--accent)] font-bold">
                 {(currentSymbol.volume / Math.max(currentSymbol.avg_volume_20d, 1)).toFixed(2)}x
               </span>
             </div>

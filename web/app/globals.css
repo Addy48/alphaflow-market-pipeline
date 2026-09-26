@@ -2,89 +2,116 @@
 
 /* ============================================================
    ALPHAFLOW QUANTITATIVE TERMINAL — INSTITUTIONAL DESIGN SYSTEM
-   Dual-Theme Token Architecture (Drafting Dark & Editorial Light)
+   Precision Multi-Asset Architecture (Drafting Dark & Editorial Light)
+   Engineered for financial analysts, avoiding neon and generic AI palettes.
    ============================================================ */
 
 :root {
-  /* Editorial Light Mode (Ivory Canvas + High-Contrast Ink) */
-  --canvas: #F7F8FA;
+  /* Editorial Light Mode (Clean Parchment Canvas + High-Contrast Ink) */
+  --canvas: #F8F9FB;
   --surface: #FFFFFF;
   --surface-raised: #FFFFFF;
-  --surface-subtle: #F0F2F5;
-  --surface-hover: #E8EBEF;
-  --surface-active: #DFE3E8;
+  --surface-subtle: #F1F4F8;
+  --surface-hover: #E7EDF4;
+  --surface-active: #DCE4EE;
 
   --text-primary: #0F172A;
-  --text-secondary: #475569;
+  --text-secondary: #334155;
   --text-muted: #64748B;
 
-  --divider: rgba(15, 23, 42, 0.08);
-  --divider-strong: rgba(15, 23, 42, 0.16);
+  --divider: rgba(15, 23, 42, 0.09);
+  --divider-strong: rgba(15, 23, 42, 0.18);
 
-  --accent: #0284C7;
-  --accent-rgb: 2, 132, 199;
-  --accent-dim: rgba(2, 132, 199, 0.08);
-  --accent-border: rgba(2, 132, 199, 0.25);
+  /* Precision Marine Steel Accent (No neon cyan) */
+  --accent: #254B72;
+  --accent-rgb: 37, 75, 114;
+  --accent-dim: rgba(37, 75, 114, 0.08);
+  --accent-border: rgba(37, 75, 114, 0.25);
 
-  --risk-critical: #E11D48;
-  --risk-critical-bg: rgba(225, 29, 72, 0.08);
-  --risk-critical-border: rgba(225, 29, 72, 0.25);
+  /* Institutional Brick Red / Drawdown */
+  --risk-critical: #B91C1C;
+  --risk-critical-bg: rgba(185, 28, 28, 0.08);
+  --risk-critical-border: rgba(185, 28, 28, 0.22);
 
-  --risk-warning: #D97706;
-  --risk-warning-bg: rgba(217, 119, 6, 0.08);
-  --risk-warning-border: rgba(217, 119, 6, 0.25);
+  /* Institutional Amber / Squeeze */
+  --risk-warning: #B45309;
+  --risk-warning-bg: rgba(180, 83, 9, 0.08);
+  --risk-warning-border: rgba(180, 83, 9, 0.22);
 
-  --risk-success: #059669;
-  --risk-success-bg: rgba(5, 150, 105, 0.08);
-  --risk-success-border: rgba(5, 150, 105, 0.25);
+  /* Institutional Forest Emerald / Return */
+  --risk-success: #15803D;
+  --risk-success-bg: rgba(21, 128, 61, 0.08);
+  --risk-success-border: rgba(21, 128, 61, 0.22);
 
-  --risk-info: #0284C7;
-  --risk-info-bg: rgba(2, 132, 199, 0.08);
-  --risk-info-border: rgba(2, 132, 199, 0.25);
+  /* Institutional Marine Info */
+  --risk-info: #2B4E72;
+  --risk-info-bg: rgba(43, 78, 114, 0.08);
+  --risk-info-border: rgba(43, 78, 114, 0.22);
 
   --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-raised: 0 4px 14px rgba(0, 0, 0, 0.08);
+
+  /* Badge styling */
+  --badge-active-bg: #E2E8F0;
+  --badge-active-text: #0F172A;
+  --badge-active-border: #CBD5E1;
+  --badge-inactive-bg: #F8FAFC;
+  --badge-inactive-text: #64748B;
+  --badge-inactive-border: #E2E8F0;
 }
 
 .dark {
-  /* Drafting Dark Mode (Obsidian Canvas + Precision Steel & Cyan) */
-  --canvas: #090A0E;
-  --surface: #0E1117;
-  --surface-raised: #141822;
-  --surface-subtle: #0B0D12;
-  --surface-hover: #191E2B;
-  --surface-active: #212738;
+  /* Drafting Dark Mode (Obsidian Slate Canvas + Muted Structural Steel) */
+  --canvas: #0B0E14;
+  --surface: #111622;
+  --surface-raised: #181F2E;
+  --surface-subtle: #0E121B;
+  --surface-hover: #1A2234;
+  --surface-active: #222C42;
 
   --text-primary: #F1F5F9;
   --text-secondary: #94A3B8;
   --text-muted: #64748B;
 
-  --divider: #1E2533;
-  --divider-strong: #2D3748;
+  --divider: #1E2738;
+  --divider-strong: #2B384F;
 
-  --accent: #06B6D4;
-  --accent-rgb: 6, 182, 212;
-  --accent-dim: rgba(6, 182, 212, 0.10);
-  --accent-border: rgba(6, 182, 212, 0.35);
+  /* Restrained Structural Steel Accent (No neon cyan) */
+  --accent: #5B8AB5;
+  --accent-rgb: 91, 138, 181;
+  --accent-dim: rgba(91, 138, 181, 0.12);
+  --accent-border: rgba(91, 138, 181, 0.35);
 
-  --risk-critical: #F43F5E;
-  --risk-critical-bg: rgba(244, 63, 94, 0.12);
-  --risk-critical-border: rgba(244, 63, 94, 0.35);
+  /* Subdued Burgundy Rose */
+  --risk-critical: #DC3858;
+  --risk-critical-bg: rgba(220, 56, 88, 0.14);
+  --risk-critical-border: rgba(220, 56, 88, 0.35);
 
-  --risk-warning: #F59E0B;
-  --risk-warning-bg: rgba(245, 158, 11, 0.12);
-  --risk-warning-border: rgba(245, 158, 11, 0.35);
+  /* Muted Gold / Amber */
+  --risk-warning: #D9822B;
+  --risk-warning-bg: rgba(217, 130, 43, 0.14);
+  --risk-warning-border: rgba(217, 130, 43, 0.35);
 
-  --risk-success: #10B981;
-  --risk-success-bg: rgba(16, 185, 129, 0.12);
-  --risk-success-border: rgba(16, 185, 129, 0.35);
+  /* Deep Forest Emerald */
+  --risk-success: #22A06B;
+  --risk-success-bg: rgba(34, 160, 107, 0.14);
+  --risk-success-border: rgba(34, 160, 107, 0.35);
 
-  --risk-info: #38BDF8;
-  --risk-info-bg: rgba(56, 189, 248, 0.12);
-  --risk-info-border: rgba(56, 189, 248, 0.35);
+  /* Muted Slate Steel */
+  --risk-info: #55799B;
+  --risk-info-bg: rgba(85, 121, 155, 0.14);
+  --risk-info-border: rgba(85, 121, 155, 0.35);
 
   --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.6);
+
+  /* Badge styling */
+  --badge-active-bg: #1E293B;
+  --badge-active-text: #E2E8F0;
+  --badge-active-border: #334155;
+  --badge-inactive-bg: #0F172A;
+  --badge-inactive-text: #64748B;
+  --badge-inactive-border: #1E293B;
 }
 
 body {
@@ -118,12 +145,12 @@ body {
 
 /* Subtle Price Flash Animations */
 @keyframes flash-green {
-  0% { background-color: rgba(16, 185, 129, 0.35); }
+  0% { background-color: rgba(34, 160, 107, 0.25); }
   100% { background-color: transparent; }
 }
 
 @keyframes flash-rose {
-  0% { background-color: rgba(244, 63, 94, 0.35); }
+  0% { background-color: rgba(220, 56, 88, 0.25); }
   100% { background-color: transparent; }
 }
 
@@ -149,4 +176,20 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+/* Print Styles for PDF Export */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .no-print, header, nav, button:not(.print-allow) {
+    display: none !important;
+  }
+  .print-area {
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
 }

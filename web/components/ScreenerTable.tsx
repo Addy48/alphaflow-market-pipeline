@@ -8,7 +8,8 @@ import {
   MagnifyingGlass, 
   SlidersHorizontal,
   Eye,
-  ChartBar
+  ChartBar,
+  FileText
 } from "@phosphor-icons/react";
 import { SymbolData } from "../types/market";
 import { SignalMatrix } from "./SignalMatrix";
@@ -16,24 +17,41 @@ import { FactorSimulator, FactorWeights } from "./FactorSimulator";
 import { StockDossier } from "./StockDossier";
 import { AreaSparkline } from "./AreaSparkline";
 import { playTick } from "../utils/audio";
+import { runFactorKMeans, ClusteredSymbol } from "../utils/kmeans";
 
 interface ScreenerTableProps {
   symbols: SymbolData[];
   onOpenChart: (symbol: string) => void;
+  onOpenReport?: (symbol: string) => void;
 }
 
 type SortField = "symbol" | "price" | "change_1d" | "volatility_30d" | "rsi_14" | "bollinger_pct_b" | "sharpe_proxy" | "composite_score";
 
 export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   symbols,
-  onOpenChart
+  onOpenChart,
+  onOpenReport
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [exchangeFilter, setExchangeFilter] = useState<string>("ALL");
   const [sectorFilter, setSectorFilter] = useState<string>("ALL");
+  const [clusterFilter, setClusterFilter] = useState<string>("ALL");
   const [strategyPreset, setStrategyPreset] = useState<string>("ALL");
   const [showSimulator, setShowSimulator] = useState(false);
   const [selectedDossierSymbol, setSelectedDossierSymbol] = useState<string | null>("NVDA");
+
+  // Dynamic K-Means Factor Clustering
+  const { clusteredSymbols, clusters } = useMemo(() => {
+    return runFactorKMeans(symbols);
+  }, [symbols]);
+
+  const clusterBySymbol = useMemo(() => {
+    const map: Record<string, ClusteredSymbol> = {};
+    clusteredSymbols.forEach((cs) => {
+      map[cs.symbol] = cs;
+    });
+    return map;
+  }, [clusteredSymbols]);
 
   // Dynamic Strategy Factor Weights
   const [weights, setWeights] = useState<FactorWeights>({
@@ -88,6 +106,11 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       if (exchangeFilter !== "ALL" && s.exchange !== exchangeFilter) return false;
       if (sectorFilter !== "ALL" && s.sector !== sectorFilter) return false;
 
+      if (clusterFilter !== "ALL") {
+        const cId = clusterBySymbol[s.symbol]?.clusterId;
+        if (cId !== Number(clusterFilter)) return false;
+      }
+
       if (strategyPreset === "BULLISH_MOMENTUM") {
         return s.rsi_14 > 55 && s.macd > s.macd_signal;
       }
@@ -115,7 +138,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       const numB = Number(bVal) || 0;
       return sortOrder === "asc" ? numA - numB : numB - numA;
     });
-  }, [symbolsWithScores, searchQuery, exchangeFilter, sectorFilter, strategyPreset, sortField, sortOrder]);
+  }, [symbolsWithScores, searchQuery, exchangeFilter, sectorFilter, clusterFilter, strategyPreset, sortField, sortOrder, clusterBySymbol]);
 
   const handleSort = (field: SortField) => {
     playTick("click");
@@ -145,7 +168,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="text-[var(--text-primary)] font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
-                <SlidersHorizontal size={15} weight="bold" className="text-cyan-500" />
+                <SlidersHorizontal size={15} weight="bold" className="text-[var(--accent)]" />
                 Quantitative Factor Screener
               </span>
               <span className="px-1.5 py-0.5 rounded bg-[var(--surface)] border border-[var(--divider)] text-[var(--text-muted)] text-[10px]">
@@ -162,7 +185,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 }}
                 className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[11px] transition btn-tactile ${
                   showSimulator
-                    ? "border-cyan-500 bg-cyan-950/30 text-cyan-400 font-bold"
+                    ? "border-[var(--accent-border)] bg-[var(--accent-dim)] text-[var(--accent)] font-bold"
                     : "border-[var(--divider)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
@@ -178,7 +201,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   placeholder="Filter symbol/name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-7 pr-3 py-1 rounded bg-[var(--surface)] border border-[var(--divider)] focus:border-cyan-500 focus:outline-none text-[var(--text-primary)] text-xs w-40 sm:w-48"
+                  className="pl-7 pr-3 py-1 rounded bg-[var(--surface)] border border-[var(--divider)] focus:border-[var(--accent)] focus:outline-none text-[var(--text-primary)] text-xs w-40 sm:w-48"
                 />
               </div>
 
@@ -193,7 +216,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     }}
                     className={`px-2 py-0.5 rounded transition btn-tactile ${
                       exchangeFilter === ex
-                        ? "bg-[var(--surface-raised)] text-cyan-500 font-bold shadow-xs"
+                        ? "bg-[var(--surface-raised)] text-[var(--accent)] font-bold shadow-xs"
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     }`}
                   >
@@ -215,6 +238,24 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 {sectors.map((s) => (
                   <option key={s} value={s}>
                     {s}
+                  </option>
+                ))}
+              </select>
+
+              {/* K-Means Cluster Archetype Dropdown */}
+              <select
+                value={clusterFilter}
+                onChange={(e) => {
+                  playTick("click");
+                  setClusterFilter(e.target.value);
+                }}
+                className="bg-[var(--surface)] border border-[var(--divider)] text-[var(--text-primary)] text-[11px] rounded px-2 py-1 focus:outline-none cursor-pointer"
+                title="Filter by K-Means Factor Cluster Archetype"
+              >
+                <option value="ALL">All Clusters</option>
+                {clusters.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.shortLabel} ({c.symbols.length})
                   </option>
                 ))}
               </select>
@@ -242,8 +283,8 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 }}
                 className={`px-2 py-0.5 rounded text-[10px] whitespace-nowrap transition border btn-tactile ${
                   strategyPreset === preset.id
-                    ? "bg-cyan-950/70 text-cyan-400 border-cyan-600/70 font-bold"
-                    : "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--divider)] hover:border-cyan-500/40 hover:text-[var(--text-primary)]"
+                    ? "bg-[var(--accent-dim)] text-[var(--accent)] border-[var(--accent-border)] font-bold"
+                    : "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--divider)] hover:border-[var(--accent-border)] hover:text-[var(--text-primary)]"
                 }`}
               >
                 {preset.label}
@@ -266,7 +307,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 <tr className="border-b border-[var(--divider)] bg-[var(--surface-subtle)] text-[10px] text-[var(--text-muted)]">
                   <th
                     onClick={() => handleSort("symbol")}
-                    className="py-2.5 px-3 font-semibold cursor-pointer hover:text-cyan-400 transition-colors"
+                    className="py-2.5 px-3 font-semibold cursor-pointer hover:text-[var(--accent)] transition-colors"
                     title="Ticker, company name & primary exchange (NSE/US)"
                   >
                     <div className="flex items-center gap-1">
@@ -282,7 +323,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   </th>
                   <th
                     onClick={() => handleSort("composite_score")}
-                    className="py-2.5 px-2 font-semibold text-center cursor-pointer hover:text-cyan-400 transition-colors"
+                    className="py-2.5 px-2 font-semibold text-center cursor-pointer hover:text-[var(--accent)] transition-colors"
                     title="Composite multi-factor momentum & Sharpe-weighted score (0-100)"
                   >
                     <div className="flex items-center justify-center gap-1">
@@ -292,7 +333,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   </th>
                   <th
                     onClick={() => handleSort("price")}
-                    className="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-cyan-400 transition-colors"
+                    className="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-[var(--accent)] transition-colors"
                     title="Latest closing price in native currency (₹ / $)"
                   >
                     <div className="flex items-center justify-end gap-1">
@@ -302,7 +343,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   </th>
                   <th
                     onClick={() => handleSort("change_1d")}
-                    className="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-cyan-400 transition-colors"
+                    className="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-[var(--accent)] transition-colors"
                     title="Single-session 1-day percentage price return"
                   >
                     <div className="flex items-center justify-end gap-1">
@@ -312,7 +353,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   </th>
                   <th
                     onClick={() => handleSort("volatility_30d")}
-                    className="py-2.5 px-2 font-semibold text-right cursor-pointer hover:text-cyan-400 transition-colors"
+                    className="py-2.5 px-2 font-semibold text-right cursor-pointer hover:text-[var(--accent)] transition-colors"
                     title="30-day annualized realized volatility (252-day basis)"
                   >
                     <div className="flex items-center justify-end gap-1">
@@ -322,7 +363,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   </th>
                   <th
                     onClick={() => handleSort("rsi_14")}
-                    className="py-2.5 px-2 font-semibold cursor-pointer hover:text-cyan-400 transition-colors"
+                    className="py-2.5 px-2 font-semibold cursor-pointer hover:text-[var(--accent)] transition-colors"
                     title="Wilder's 14-day Relative Strength Index (Oversold <30, Overbought >70)"
                   >
                     <div className="flex items-center gap-1">
@@ -332,7 +373,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   </th>
                   <th
                     onClick={() => handleSort("bollinger_pct_b")}
-                    className="py-2.5 px-2 font-semibold text-right cursor-pointer hover:text-cyan-400 transition-colors"
+                    className="py-2.5 px-2 font-semibold text-right cursor-pointer hover:text-[var(--accent)] transition-colors"
                     title="Bollinger Bands Bandwidth Position: (Close - Lower) / (Upper - Lower)"
                   >
                     <div className="flex items-center justify-end gap-1">
@@ -342,7 +383,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   </th>
                   <th
                     onClick={() => handleSort("sharpe_proxy")}
-                    className="py-2.5 px-2 font-semibold text-right cursor-pointer hover:text-cyan-400 transition-colors"
+                    className="py-2.5 px-2 font-semibold text-right cursor-pointer hover:text-[var(--accent)] transition-colors"
                     title="Annualized Sharpe ratio proxy calculated against 4.5% risk-free rate"
                   >
                     <div className="flex items-center justify-end gap-1">
@@ -358,7 +399,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   </th>
                   <th
                     className="py-2.5 px-2 font-semibold text-center"
-                    title="Quick inspection actions (Quantitative Dossier / Technical Chart)"
+                    title="Quick inspection actions (Dossier / Chart / Tear-Sheet)"
                   >
                     ACTION
                   </th>
@@ -370,6 +411,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   const isPos = item.change_1d >= 0;
                   const currencyPrefix = item.exchange === "NSE" ? "₹" : "$";
                   const isSelected = selectedDossierSymbol === item.symbol;
+                  const cluster = clusterBySymbol[item.symbol];
 
                    return (
                     <tr
@@ -397,12 +439,20 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                               <span
                                 className={`px-1 rounded text-[9px] font-bold ${
                                   item.exchange === "NSE"
-                                    ? "bg-amber-950/60 text-amber-300 border border-amber-800/40"
-                                    : "bg-blue-950/60 text-blue-300 border border-blue-800/40"
+                                    ? "bg-[var(--risk-warning-bg)] text-[var(--risk-warning)] border border-[var(--risk-warning-border)]"
+                                    : "bg-[var(--risk-info-bg)] text-[var(--risk-info)] border border-[var(--risk-info-border)]"
                                 }`}
                               >
                                 {item.exchange}
                               </span>
+                              {cluster && (
+                                <span
+                                  className="px-1 py-0.5 rounded text-[8px] font-semibold border border-[var(--divider)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] tracking-tight whitespace-nowrap"
+                                  title={`K-Means Archetype: ${cluster.clusterName}`}
+                                >
+                                  {cluster.clusterLabel}
+                                </span>
+                              )}
                             </div>
                             <span className="text-[10px] text-[var(--text-muted)] truncate max-w-[130px]">
                               {item.name}
@@ -421,10 +471,10 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         <span
                           className={`inline-block px-1.5 py-0.5 rounded font-black text-xs tabular-nums ${
                             item.composite_score >= 70
-                              ? "bg-emerald-950/60 text-emerald-400 border border-emerald-800/40"
+                              ? "bg-[var(--risk-success-bg)] text-[var(--risk-success)] border border-[var(--risk-success-border)]"
                               : item.composite_score >= 50
-                              ? "bg-cyan-950/60 text-cyan-400 border border-cyan-800/40"
-                              : "bg-zinc-800/40 text-zinc-400"
+                              ? "bg-[var(--accent-dim)] text-[var(--accent)] border border-[var(--accent-border)]"
+                              : "bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-[var(--divider)]"
                           }`}
                         >
                           {item.composite_score.toFixed(1)}
@@ -445,8 +495,8 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         <span
                           className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-bold ${
                             isPos
-                              ? "bg-emerald-950/70 text-emerald-400 border border-emerald-800/60"
-                              : "bg-rose-950/70 text-rose-400 border border-rose-800/60"
+                              ? "bg-[var(--risk-success-bg)] text-[var(--risk-success)] border border-[var(--risk-success-border)]"
+                              : "bg-[var(--risk-critical-bg)] text-[var(--risk-critical)] border border-[var(--risk-critical-border)]"
                           }`}
                         >
                           {isPos ? (
@@ -476,9 +526,9 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         <span
                           className={`font-semibold ${
                             item.bollinger_pct_b > 1.0
-                              ? "text-emerald-500"
+                              ? "text-[var(--risk-success)]"
                               : item.bollinger_pct_b < 0.0
-                              ? "text-rose-500"
+                              ? "text-[var(--risk-critical)]"
                               : "text-[var(--text-secondary)]"
                           }`}
                         >
@@ -501,12 +551,25 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                       {/* Action */}
                       <td className="py-2 px-2 text-center">
                         <div className="flex items-center justify-center gap-1">
+                          {onOpenReport && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                playTick("click");
+                                onOpenReport(item.symbol);
+                              }}
+                              className="p-1 rounded border border-transparent group-hover:border-[var(--divider)] bg-transparent group-hover:bg-[var(--surface-subtle)] hover:!bg-[var(--accent-dim)] hover:!text-[var(--accent)] hover:!border-[var(--accent-border)] text-[var(--text-muted)] transition-all btn-tactile hover:scale-110 active:scale-95"
+                              title="Generate Institutional Research Tear-Sheet"
+                            >
+                              <FileText size={13} weight="bold" />
+                            </button>
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRowClick(item.symbol);
                             }}
-                            className="p-1 rounded border border-transparent group-hover:border-[var(--divider)] bg-transparent group-hover:bg-[var(--surface-subtle)] hover:!bg-cyan-950/80 hover:!text-cyan-300 hover:!border-cyan-500/60 text-[var(--text-muted)] transition-all btn-tactile hover:scale-110 active:scale-95"
+                            className="p-1 rounded border border-transparent group-hover:border-[var(--divider)] bg-transparent group-hover:bg-[var(--surface-subtle)] hover:!bg-[var(--accent-dim)] hover:!text-[var(--accent)] hover:!border-[var(--accent-border)] text-[var(--text-muted)] transition-all btn-tactile hover:scale-110 active:scale-95"
                             title="Inspect Quantitative Dossier"
                           >
                             <Eye size={13} weight="bold" />
@@ -517,7 +580,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                               playTick("blip");
                               onOpenChart(item.symbol);
                             }}
-                            className="p-1 rounded border border-transparent group-hover:border-[var(--divider)] bg-transparent group-hover:bg-[var(--surface-subtle)] hover:!bg-cyan-950/80 hover:!text-cyan-300 hover:!border-cyan-500/60 text-[var(--text-muted)] transition-all btn-tactile hover:scale-110 active:scale-95"
+                            className="p-1 rounded border border-transparent group-hover:border-[var(--divider)] bg-transparent group-hover:bg-[var(--surface-subtle)] hover:!bg-[var(--accent-dim)] hover:!text-[var(--accent)] hover:!border-[var(--accent-border)] text-[var(--text-muted)] transition-all btn-tactile hover:scale-110 active:scale-95"
                             title="Open Technical Workspace"
                           >
                             <ChartBar size={13} weight="bold" />
@@ -538,6 +601,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 symbol={activeDossierItem}
                 onClose={() => setSelectedDossierSymbol(null)}
                 onOpenChart={onOpenChart}
+                onOpenReport={onOpenReport}
               />
             </div>
           )}
@@ -552,7 +616,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           <div className="flex items-center gap-4">
             <span>
               Top Alpha:{" "}
-              <span className="font-bold text-cyan-500">
+              <span className="font-bold text-[var(--accent)]">
                 {filteredSymbols[0]?.symbol || "—"} ({filteredSymbols[0]?.composite_score.toFixed(1) || 0})
               </span>
             </span>

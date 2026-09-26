@@ -44,7 +44,7 @@ export const FactorSimulator: React.FC<FactorSimulatorProps> = ({
     <div className="p-3 border-t border-[var(--divider)] bg-[var(--surface-subtle)] flex flex-col gap-3 font-mono text-xs transition-colors duration-200">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal size={15} weight="bold" className="text-cyan-500" />
+          <SlidersHorizontal size={15} weight="bold" className="text-[var(--accent)]" />
           <span className="font-bold text-[var(--text-primary)] uppercase tracking-wider text-xs">
             Dynamic Strategy Factor Weighting Engine
           </span>
@@ -58,25 +58,25 @@ export const FactorSimulator: React.FC<FactorSimulatorProps> = ({
           <span className="text-[10px] text-[var(--text-muted)] uppercase mr-1">Presets:</span>
           <button
             onClick={() => applyPreset("BALANCED")}
-            className="px-2 py-0.5 rounded text-[10px] border border-[var(--divider)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-cyan-500/40 transition btn-tactile cursor-pointer"
+            className="px-2 py-0.5 rounded text-[10px] border border-[var(--divider)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-border)] transition btn-tactile cursor-pointer"
           >
             Balanced Alpha
           </button>
           <button
             onClick={() => applyPreset("MOMENTUM")}
-            className="px-2 py-0.5 rounded text-[10px] border border-[var(--divider)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-cyan-500/40 transition btn-tactile cursor-pointer"
+            className="px-2 py-0.5 rounded text-[10px] border border-[var(--divider)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-border)] transition btn-tactile cursor-pointer"
           >
             Trend Expansion
           </button>
           <button
             onClick={() => applyPreset("DEFENSIVE")}
-            className="px-2 py-0.5 rounded text-[10px] border border-[var(--divider)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-cyan-500/40 transition btn-tactile cursor-pointer"
+            className="px-2 py-0.5 rounded text-[10px] border border-[var(--divider)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-border)] transition btn-tactile cursor-pointer"
           >
             Defensive Vol
           </button>
           <button
             onClick={() => applyPreset("REVERSION")}
-            className="px-2 py-0.5 rounded text-[10px] border border-[var(--divider)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-cyan-500/40 transition btn-tactile cursor-pointer"
+            className="px-2 py-0.5 rounded text-[10px] border border-[var(--divider)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-border)] transition btn-tactile cursor-pointer"
           >
             Mean Reversion
           </button>
@@ -89,7 +89,7 @@ export const FactorSimulator: React.FC<FactorSimulatorProps> = ({
         <div className="p-2.5 rounded border border-[var(--divider)] bg-[var(--surface)] flex flex-col gap-1.5 shadow-xs">
           <div className="flex justify-between text-[var(--text-secondary)] text-[11px]">
             <span>Momentum (RSI & MACD)</span>
-            <span className="text-cyan-500 font-bold tabular-nums">{weights.momentum}%</span>
+            <span className="text-[var(--accent)] font-bold tabular-nums">{weights.momentum}%</span>
           </div>
           <input
             type="range"
@@ -97,7 +97,7 @@ export const FactorSimulator: React.FC<FactorSimulatorProps> = ({
             max="100"
             value={weights.momentum}
             onChange={(e) => handleSliderChange("momentum", Number(e.target.value))}
-            className="w-full accent-cyan-500 h-1.5 bg-[var(--surface-subtle)] rounded-lg cursor-pointer"
+            className="w-full accent-[#254B72] dark:accent-[#5B8AB5] h-1.5 bg-[var(--surface-subtle)] rounded-lg cursor-pointer"
           />
         </div>
 

@@ -19,7 +19,9 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
     { key: "1", desc: "Switch to Factor Screener & Data Grid" },
     { key: "2", desc: "Switch to Technical Candlestick Workspace" },
     { key: "3", desc: "Switch to Cross-Market Correlation Matrix" },
-    { key: "4", desc: "Switch to Lakehouse Ingestion SLA" },
+    { key: "4", desc: "Switch to K-Means Factor Clustering Archetypes" },
+    { key: "5", desc: "Switch to Lakehouse Ingestion Telemetry & SLA" },
+    { key: "R", desc: "Open Institutional Research Tear-Sheet (PDF)" },
     { key: "T", desc: "Toggle Dark Graphite / Editorial Light Theme" },
     { key: "P", desc: "Toggle Live Market Ticking Cadence" },
     { key: "⌘ K", desc: "Open Command Palette Search" },
@@ -32,7 +34,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
       <div className="bg-[var(--surface)] border border-[var(--divider-strong)] rounded-lg w-full max-w-md shadow-raised overflow-hidden animate-in zoom-in-95 duration-150">
         <div className="p-3 border-b border-[var(--divider)] bg-[var(--surface-subtle)] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Keyboard size={16} weight="bold" className="text-cyan-500" />
+            <Keyboard size={16} weight="bold" className="text-[var(--accent)]" />
             <span className="font-bold text-[var(--text-primary)] text-xs uppercase tracking-wider">
               Terminal Keyboard Shortcuts
             </span>

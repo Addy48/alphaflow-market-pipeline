@@ -63,7 +63,7 @@ export const LakehouseTelemetry: React.FC<LakehouseTelemetryProps> = ({ telemetr
       {/* Header */}
       <div className="p-3 border-b border-[var(--divider)] bg-[var(--surface-subtle)] flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Cpu size={16} weight="bold" className="text-cyan-500" />
+          <Cpu size={16} weight="bold" className="text-[var(--accent)]" />
           <span className="text-[var(--text-primary)] font-bold uppercase tracking-wider text-xs">
             Medallion Lakehouse Observability & Ingestion SLA
           </span>
@@ -123,14 +123,14 @@ export const LakehouseTelemetry: React.FC<LakehouseTelemetryProps> = ({ telemetr
             </div>
 
             {/* Engineered Factor Store */}
-            <div className="p-3 rounded-lg border border-cyan-800/80 bg-cyan-950/20 flex flex-col gap-2 relative group hover:border-cyan-500/80 hover:-translate-y-1 hover:shadow-raised transition-all duration-200 cursor-default">
+            <div className="p-3 rounded-lg border border-[var(--accent-border)] bg-[var(--accent-dim)] flex flex-col gap-2 relative group hover:border-[var(--accent)] hover:-translate-y-1 hover:shadow-raised transition-all duration-200 cursor-default">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-cyan-400 text-xs">ENGINEERED FACTOR STORE</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold">
+                <span className="font-bold text-[var(--text-primary)] text-xs">ENGINEERED FACTOR STORE</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-[var(--surface)] text-[var(--accent)] border border-[var(--accent-border)] font-bold">
                   GOLD
                 </span>
               </div>
-              <div className="text-xl font-bold text-cyan-400 tabular-nums">
+              <div className="text-xl font-bold text-[var(--text-primary)] tabular-nums">
                 {telemetry.gold_records.toLocaleString()} <span className="text-xs text-[var(--text-muted)] font-normal">RECS</span>
               </div>
               <div className="text-[11px] text-[var(--text-secondary)] flex flex-col gap-0.5">
@@ -144,10 +144,10 @@ export const LakehouseTelemetry: React.FC<LakehouseTelemetryProps> = ({ telemetr
 
         {/* SLA & Quality Gates Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div className="p-3 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] hover:border-cyan-500/50 hover:-translate-y-0.5 hover:shadow-raised transition-all duration-200 cursor-default flex flex-col gap-1 shadow-xs group">
+          <div className="p-3 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] hover:border-[var(--accent-border)] hover:-translate-y-0.5 hover:shadow-raised transition-all duration-200 cursor-default flex flex-col gap-1 shadow-xs group">
             <div className="flex items-center justify-between text-[var(--text-secondary)] text-[11px]">
               <span className="group-hover:text-[var(--text-primary)] transition-colors">INGESTION SLA LATENCY</span>
-              <Clock size={14} weight="bold" className="text-cyan-500 group-hover:scale-110 transition-transform" />
+              <Clock size={14} weight="bold" className="text-[var(--accent)] group-hover:scale-110 transition-transform" />
             </div>
             <div className="text-xl font-bold text-[var(--text-primary)] tabular-nums">
               {telemetry.ingestion_sla_seconds}s
@@ -236,7 +236,7 @@ export const LakehouseTelemetry: React.FC<LakehouseTelemetryProps> = ({ telemetr
                     <td className="py-2 px-3 text-right tabular-nums text-[var(--text-primary)]">
                       {run.records.toLocaleString()}
                     </td>
-                    <td className="py-2 px-3 text-right tabular-nums text-cyan-500 font-semibold">
+                    <td className="py-2 px-3 text-right tabular-nums text-[var(--accent)] font-semibold">
                       {run.latency_s}s
                     </td>
                     <td className="py-2 px-3 text-right tabular-nums text-emerald-500 font-semibold">
@@ -281,7 +281,7 @@ export const LakehouseTelemetry: React.FC<LakehouseTelemetryProps> = ({ telemetr
             <div className="p-3 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] flex flex-col gap-1">
               <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
                 <span>EVENT TRIGGER</span>
-                <Clock size={14} weight="bold" className="text-cyan-500" />
+                <Clock size={14} weight="bold" className="text-[var(--accent)]" />
               </div>
               <div className="text-sm font-bold text-[var(--text-primary)]">
                 AWS EventBridge
@@ -420,7 +420,7 @@ export const LakehouseTelemetry: React.FC<LakehouseTelemetryProps> = ({ telemetr
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[var(--text-secondary)]">Bollinger %B:</span>
-                        <span className="font-bold text-cyan-400">{sampleAlert.metrics.bollinger_pct_b}</span>
+                        <span className="font-bold text-[var(--accent)]">{sampleAlert.metrics.bollinger_pct_b}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[var(--text-secondary)]">Alpha Score:</span>
