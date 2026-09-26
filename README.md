@@ -19,55 +19,15 @@ AlphaFlow is an enterprise-grade quantitative market data engineering platform a
 
 ## Unified System Architecture
 
-The platform operates across two complementary processing planes:
+The platform operates across two complementary processing planes: a **Batch Medallion Lakehouse** for analytical factor marts and a **Serverless Event-Driven Sentinel** for real-time breakout alerting.
 
-```mermaid
-flowchart TD
-    subgraph MarketSources["1. Dual-Exchange Market Ingestion"]
-        NSE[NIFTY 50 Constituents]
-        SP[S&P 500 Constituents]
-        YF[Multi-Source Market Feeds]
-    end
+<div align="center">
+  <img src="./docs/architecture/alphaflow_architecture.png" alt="AlphaFlow Unified Quantitative Architecture Diagram" width="100%" />
+  <p><em>Figure 1: End-to-end AlphaFlow dual-plane architecture: Medallion Lakehouse factor mart and real-time serverless sentinel.</em></p>
+</div>
 
-    subgraph BatchLakehouse["2. Batch Medallion Lakehouse Layer"]
-        BronzeGate[Bronze Gate: Non-blocking Schema Check]
-        S3Bronze[(S3 Bronze: Raw JSON/Parquet)]
-        CleanFilter[Zero-Vol Halts & ±15% Outlier Guard]
-        S3Silver[(S3 Silver: Cleansed Parquet Mart)]
-        QuantEngine[Vectorized Quant Engine: RSI / Bollinger / MACD / Sharpe]
-        GoldGate[Gold Gate: Strict Pandera Analytical Schema]
-        S3Gold[(S3 Gold: Partitioned Factor Store)]
-        Glue[AWS Glue Data Catalog]
-        Athena[AWS Athena Serverless SQL]
-    end
+> 💡 **Interactive Architecture Visualizer:** Open [`docs/architecture/alphaflow_architecture.html`](./docs/architecture/alphaflow_architecture.html) in your browser to inspect nodes, trace upstream/downstream dependencies, and explore guided system views.
 
-    subgraph ServerlessSentinel["3. Event-Driven Serverless Sentinel"]
-        Cron[EventBridge: cron(30 21 ? * MON-FRI *)]
-        Lambda[AWS Lambda: Factor Sentinel]
-        DDB[(DynamoDB: 90-Day TTL State Cache)]
-        CrossDetect[Anti-Chatter Transition Detector]
-        SNS[AWS SNS: Multi-Channel Topic]
-        AlertDest[Subscribed Analysts / Webhooks]
-    end
-
-    subgraph Delivery["4. Delivery & Interactive Visualization"]
-        Web[Next.js 16 Web Terminal (alphaflow-terminal.vercel.app)]
-        Audit[Pandera Telemetry & Run Logs]
-    end
-
-    NSE & SP & YF --> BronzeGate --> S3Bronze
-    S3Bronze --> CleanFilter --> S3Silver
-    S3Silver --> QuantEngine --> GoldGate --> S3Gold
-    S3Gold --> Glue --> Athena
-    S3Gold --> Web
-    GoldGate --> Audit
-
-    Cron --> Lambda
-    YF -.-> Lambda
-    Lambda <--> DDB
-    Lambda --> CrossDetect
-    CrossDetect -- Breakout Detected --> SNS --> AlertDest
-```
 
 ---
 

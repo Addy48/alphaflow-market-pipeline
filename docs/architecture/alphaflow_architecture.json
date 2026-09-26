@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "AlphaFlow Quantitative Architecture",
+    "output": "alphaflow-architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "lakehouse-pipeline",
+        "label": "Lakehouse Pipeline",
+        "focus": ["nse_market", "sp_market", "feed_orchestrator", "bronze_s3", "cleansing_guard", "silver_s3", "quant_engine", "gold_s3", "web_terminal"],
+        "note": "Daily batch ingestion from dual exchanges through Bronze, Silver, and Gold factor marts into the Next.js terminal."
+      },
+      {
+        "id": "sentinel-alerts",
+        "label": "Serverless Sentinel",
+        "focus": ["eventbridge_cron", "lambda_sentinel", "dynamodb_state", "anti_chatter", "sns_dispatch"],
+        "note": "Post-market close EventBridge triggers Lambda to evaluate state against DynamoDB and publish anti-chatter alerts to SNS."
+      },
+      {
+        "id": "full-flow",
+        "label": "End-to-End System",
+        "focus": ["feed_orchestrator", "gold_s3", "athena_glue", "web_terminal", "lambda_sentinel", "sns_dispatch"],
+        "note": "Complete synchronization between Lakehouse historical factor storage and real-time breakout alerting."
+      }
+    ]
+  },
+  "components": [
+    { "id": "nse_market", "type": "external", "label": "NSE Market Feed", "sublabel": "NIFTY 50", "pos": [30, 100], "size": [110, 48] },
+    { "id": "sp_market", "type": "external", "label": "US Market Feed", "sublabel": "S&P 500", "pos": [30, 190], "size": [110, 48] },
+    { "id": "feed_orchestrator", "type": "backend", "label": "Ingestion Pipeline", "sublabel": "run_pipeline.py", "pos": [170, 145], "size": [120, 52] },
+    { "id": "bronze_s3", "type": "database", "label": "S3 Bronze Lake", "sublabel": "Raw Parquet/JSON", "pos": [320, 145], "size": [120, 48], "tag": "Schema Gate" },
+    { "id": "cleansing_guard", "type": "security", "label": "Pandera Guard", "sublabel": "Zero-Vol Spikes", "pos": [470, 145], "size": [120, 48] },
+    { "id": "silver_s3", "type": "database", "label": "S3 Silver Mart", "sublabel": "Cleansed Daily", "pos": [620, 145], "size": [120, 48] },
+    { "id": "quant_engine", "type": "backend", "label": "Quant Engine", "sublabel": "Vector Factors", "pos": [770, 145], "size": [120, 52] },
+    { "id": "gold_s3", "type": "database", "label": "S3 Gold Mart", "sublabel": "Snappy Parquet", "pos": [920, 145], "size": [120, 48] },
+    { "id": "athena_glue", "type": "cloud", "label": "AWS Athena/Glue", "sublabel": "Serverless SQL", "pos": [920, 245], "size": [120, 48] },
+    { "id": "web_terminal", "type": "frontend", "label": "Web Terminal", "sublabel": "Next.js 16 App", "pos": [920, 45], "size": [120, 52] },
+    { "id": "eventbridge_cron", "type": "cloud", "label": "EventBridge", "sublabel": "Post-Close Cron", "pos": [170, 360], "size": [120, 48] },
+    { "id": "lambda_sentinel", "type": "backend", "label": "Lambda Sentinel", "sublabel": "Breakout Engine", "pos": [340, 360], "size": [120, 52] },
+    { "id": "dynamodb_state", "type": "database", "label": "DynamoDB State", "sublabel": "90-Day TTL", "pos": [500, 360], "size": [120, 48] },
+    { "id": "anti_chatter", "type": "security", "label": "Anti-Chatter", "sublabel": "Transition Gate", "pos": [660, 360], "size": [120, 48] },
+    { "id": "sns_dispatch", "type": "messagebus", "label": "AWS SNS Topic", "sublabel": "Alert Fanout", "pos": [820, 360], "size": [120, 48] }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Medallion Data Lakehouse Layer",
+      "wraps": ["bronze_s3", "cleansing_guard", "silver_s3", "quant_engine", "gold_s3", "athena_glue"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Event-Driven Serverless Sentinel",
+      "wraps": ["eventbridge_cron", "lambda_sentinel", "dynamodb_state", "anti_chatter", "sns_dispatch"]
+    }
+  ],
+  "connections": [
+    { "from": "nse_market", "to": "feed_orchestrator", "fromSide": "right", "toSide": "left" },
+    { "from": "sp_market", "to": "feed_orchestrator", "fromSide": "right", "toSide": "left" },
+    { "from": "feed_orchestrator", "to": "bronze_s3", "variant": "emphasis" },
+    { "from": "bronze_s3", "to": "cleansing_guard", "variant": "security" },
+    { "from": "cleansing_guard", "to": "silver_s3", "variant": "emphasis" },
+    { "from": "silver_s3", "to": "quant_engine" },
+    { "from": "quant_engine", "to": "gold_s3", "variant": "emphasis" },
+    { "from": "gold_s3", "to": "athena_glue", "fromSide": "bottom", "toSide": "top" },
+    { "from": "gold_s3", "to": "web_terminal", "variant": "emphasis", "fromSide": "top", "toSide": "bottom" },
+    { "from": "eventbridge_cron", "to": "lambda_sentinel" },
+    { "from": "lambda_sentinel", "to": "dynamodb_state" },
+    { "from": "dynamodb_state", "to": "anti_chatter" },
+    { "from": "anti_chatter", "to": "sns_dispatch", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Medallion Lakehouse",
+      "items": [
+        "Snappy-compressed columnar Parquet partitions on S3",
+        "Pandera contracts: zero nulls, non-zero vol, ±15% outlier bounds",
+        "14 Vectorized factors: RSI-14, Bollinger %B, MACD, Sharpe proxy"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Serverless Sentinel",
+      "items": [
+        "EventBridge post-market cron triggers AWS Lambda",
+        "DynamoDB 90-day automatic TTL eliminates storage bloat",
+        "Anti-chatter transition logic prevents repeated alert fatigue"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Web Terminal & Delivery",
+      "items": [
+        "Next.js 16 + React 19 interactive Bloomberg-style workspace",
+        "Cross-market Pearson correlation matrix & factor screener",
+        "Zero-cloud local simulation mode with Credit Shield protection"
+      ]
+    }
+  ]
+}
