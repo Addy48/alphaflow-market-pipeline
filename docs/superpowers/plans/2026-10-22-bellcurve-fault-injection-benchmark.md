@@ -45,11 +45,12 @@ def test_injection_is_deterministic_and_labelled():
 def test_clean_rows_are_unchanged():
     base = _base()
     out, labels = inject_faults(base, seed=7, rate=0.05)
-    clean = labels.isna()
+    n = len(base)  # appended duplicate rows come after the original rows
+    clean = labels.iloc[:n].isna().values
     cols = ["Open", "High", "Low", "Close", "Volume"]
     pd.testing.assert_frame_equal(
-        base.loc[clean.values, cols].reset_index(drop=True),
-        out.loc[clean.values, cols].reset_index(drop=True),
+        base.loc[clean, cols].reset_index(drop=True),
+        out.iloc[:n].loc[clean, cols].reset_index(drop=True),
     )
 ```
 
@@ -72,7 +73,7 @@ FAULT_TYPES = ("bad_tick", "zero_volume", "duplicate_row")
 
 def inject_faults(df: pd.DataFrame, seed: int, rate: float = 0.05):
     """Return (faulty_df, labels). labels[i] is a fault name or NaN for a clean row.
-    Rows are only modified in place (bad_tick, zero_volume) or appended (duplicate_row);
+    bad_tick and zero_volume modify rows in place; duplicate_row appends a copy and only the copy is labelled.
     labels always align with the returned frame."""
     rng = np.random.default_rng(seed)
     out = df.copy().reset_index(drop=True)
@@ -87,7 +88,8 @@ def inject_faults(df: pd.DataFrame, seed: int, rate: float = 0.05):
         elif kind == "zero_volume":
             out.loc[idx, "Volume"] = 0
         else:
-            dups.append(idx)
+            dups.append(idx)  # the original row stays clean; only the appended copy is the fault
+            continue
         labels[idx] = kind
     if dups:
         extra = out.loc[dups].copy()
@@ -145,6 +147,7 @@ def test_bad_tick_check_catches_tenfold_jumps():
     df, labels = _faulty()
     flags = check_bad_tick(df)
     assert flags[labels == "bad_tick"].mean() >= 0.9
+    assert flags[labels.isna()].mean() <= 0.01  # false alarms stay rare
 ```
 
 - [ ] **Step 2: Run test, expect FAIL** (`ModuleNotFoundError: No module named 'src.dq_checks'`)
@@ -168,16 +171,16 @@ def check_duplicate(df: pd.DataFrame) -> pd.Series:
     return df.duplicated(subset=["Symbol", "Date"], keep="first")
 
 
-def check_bad_tick(df: pd.DataFrame, window: int = 20, k: float = 6.0) -> pd.Series:
-    """Robust z-score of close vs rolling median of the previous window (MAD based)."""
+def check_bad_tick(df: pd.DataFrame, window: int = 20, max_dev: float = 0.5) -> pd.Series:
+    """Flag a close that deviates more than max_dev (50%) from the median of the previous window.
+    Daily moves in the simulator are about 2%, so a 50% jump is a data error, not a market move."""
     close = df["Close"].reset_index(drop=True)
-    med = close.rolling(window, min_periods=5).median().shift(1)
-    mad = (close - med).abs().rolling(window, min_periods=5).median().shift(1)
-    z = (close - med).abs() / (1.4826 * mad.replace(0, pd.NA))
-    return (z > k).fillna(False).astype(bool).set_axis(df.index)
+    med = close.rolling(window, min_periods=3).median().shift(1)
+    dev = (close / med - 1).abs()
+    return (dev > max_dev).fillna(False).astype(bool).set_axis(df.index)
 ```
 
-- [ ] **Step 4: Run test, expect PASS** (3 passed). If bad-tick recall is below 0.9, adjust `k` or `window` and re-run; record the final values in the commit message.
+- [ ] **Step 4: Run test, expect PASS** (3 passed). If bad-tick recall is below 0.9, adjust `window` or `max_dev` and re-run; record the final values in the commit message.
 
 - [ ] **Step 5: Commit**
 
@@ -211,6 +214,8 @@ def test_benchmark_reports_precision_and_recall_per_fault():
         m = res["per_fault"][fault]
         assert 0.0 <= m["precision"] <= 1.0 and 0.0 <= m["recall"] <= 1.0
     assert res["per_fault"]["zero_volume"]["recall"] == 1.0
+    assert res["per_fault"]["duplicate_row"]["recall"] == 1.0
+    assert res["per_fault"]["bad_tick"]["recall"] >= 0.9
     assert res["seed"] == 11
 
 
@@ -291,6 +296,8 @@ Expected: 2 passed; three lines printed. Copy the printed numbers into `EVIDENCE
 git add scripts/benchmark_checks.py tests/test_benchmark.py results/benchmark.json EVIDENCE.md
 git commit -m "feat: detection benchmark over injected faults with reproducible results"
 ```
+
+Verified: Tasks 1-3 code was extracted into a scratch copy and run: 52 tests pass, benchmark prints 1.000 precision/recall for all three faults. These first faults are crude (10x price, zero volume, exact duplicate), so perfect scores are expected. Task 4 must add subtle faults (for example a 4-8 percent price error, a stale repeated close, a one-day timestamp shift) and a second statistical detector so the benchmark shows real trade-offs (recall below 1.0, false alarms above 0) and compares detectors honestly.
 
 ### Later tasks (each gets its own detailed plan once Task 1-3 are merged)
 - Task 4: more fault types (missing day, stale close, schema drift, unadjusted split) with matching checks and benchmark rows. Test: `tests/test_faults_extended.py`.
