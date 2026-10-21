@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { 
   Clock, 
   ShieldCheck, 
@@ -10,15 +12,22 @@ import {
   Sun, 
   Moon, 
   Question, 
-  DownloadSimple, 
   MagnifyingGlass,
   TrendUp,
   TrendDown,
-  FileText
+  FileText,
+  Globe,
+  Robot,
+  ChartLine,
+  Table,
+  SquaresFour,
+  Cpu,
+  BookOpen
 } from "@phosphor-icons/react";
 import { BenchmarkItem } from "../types/market";
 import { Marquee } from "./Marquee";
-import { playTick, toggleSound } from "../utils/audio";
+import { playTick, toggleSound, isSoundEnabled } from "../utils/audio";
+import { BrandLogo } from "./BrandLogo";
 
 interface HeaderProps {
   benchmarks: BenchmarkItem[];
@@ -28,12 +37,16 @@ interface HeaderProps {
   onExportJson: () => void;
   onExportCsv: () => void;
   onOpenReport?: () => void;
+  onOpenMacro?: () => void;
+  onOpenAnalyst?: () => void;
   refreshInterval: number;
   setRefreshInterval: (interval: number) => void;
   lastUpdated: string;
   isDark: boolean;
   onToggleTheme: () => void;
   onOpenShortcuts: () => void;
+  onRefreshData?: () => void;
+  isRefreshing?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -44,27 +57,28 @@ export const Header: React.FC<HeaderProps> = ({
   onExportJson,
   onExportCsv,
   onOpenReport,
+  onOpenMacro,
+  onOpenAnalyst,
   refreshInterval,
   setRefreshInterval,
   lastUpdated,
   isDark,
   onToggleTheme,
-  onOpenShortcuts
+  onOpenShortcuts,
+  onRefreshData,
+  isRefreshing = false
 }) => {
-  const [times, setTimes] = useState({
-    utc: "",
-    ny: "",
-    ist: ""
-  });
-  const [soundOn, setSoundOn] = useState(true);
+  const pathname = usePathname();
+  const [soundOn, setSoundOn] = useState<boolean>(() => (typeof window !== "undefined" ? isSoundEnabled() : false));
+  const [times, setTimes] = useState({ ny: "", ist: "", utc: "" });
 
   useEffect(() => {
     const updateClocks = () => {
       const now = new Date();
       setTimes({
-        utc: now.toLocaleTimeString("en-GB", { timeZone: "UTC", hour12: false }) + " UTC",
-        ny: now.toLocaleTimeString("en-US", { timeZone: "America/New_York", hour12: false }) + " ET",
-        ist: now.toLocaleTimeString("en-GB", { timeZone: "Asia/Kolkata", hour12: false }) + " IST"
+        ny: now.toLocaleTimeString("en-US", { timeZone: "America/New_York", hour12: false }),
+        ist: now.toLocaleTimeString("en-US", { timeZone: "Asia/Kolkata", hour12: false }),
+        utc: now.toLocaleTimeString("en-US", { timeZone: "UTC", hour12: false })
       });
     };
     updateClocks();
@@ -77,66 +91,212 @@ export const Header: React.FC<HeaderProps> = ({
     setSoundOn(state);
   };
 
-  return (
-    <header className="border-b border-[var(--divider)] bg-[var(--surface)] backdrop-blur-md sticky top-0 z-40 transition-colors duration-200 shadow-xs">
-      {/* Top Utility Ribbon */}
-      <div className="px-4 py-1.5 flex flex-wrap items-center justify-between border-b border-[var(--divider)] text-xs text-[var(--text-secondary)] gap-2 bg-[var(--surface-subtle)]">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 font-mono text-[11px]">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span className="text-[var(--text-primary)] font-bold tracking-wider">ALPHAFLOW</span>
-            <span className="text-[var(--text-muted)]">|</span>
-            <span className="text-[var(--text-muted)]">Market Intelligence Pipeline</span>
-          </div>
+  const navLinks = [
+    { label: "Screener", href: "/", icon: Table },
+    { label: "Charts", href: "/charts", icon: ChartLine },
+    { label: "Matrix & Heatmap", href: "/matrix", icon: SquaresFour },
+    { label: "Architecture", href: "/architecture", icon: Cpu },
+    { label: "Methodology", href: "/methodology", icon: BookOpen },
+  ];
 
-          <div className="hidden md:flex items-center gap-3 font-mono text-[11px] text-[var(--text-secondary)]">
-            <span className="flex items-center gap-1">
-              <Clock size={13} weight="bold" className="text-[var(--text-muted)]" />
-              <span>NY:</span>
-              <span className="text-[var(--text-primary)] font-semibold">{times.ny || "16:00 ET"}</span>
-            </span>
-            <span className="opacity-30">/</span>
-            <span className="flex items-center gap-1">
-              <span>MUM:</span>
-              <span className="text-[var(--text-primary)] font-semibold">{times.ist || "15:30 IST"}</span>
-            </span>
-            <span className="opacity-30">/</span>
-            <span className="flex items-center gap-1">
-              <span>UTC:</span>
-              <span className="text-[var(--text-primary)] font-semibold">{times.utc || "20:00 UTC"}</span>
-            </span>
-            <span className="opacity-30 hidden md:inline">/</span>
-            <span className="items-center gap-1 hidden md:flex text-[var(--text-muted)]">
-              <span>SYNC:</span>
-              <span className="text-[var(--text-secondary)]">{lastUpdated}</span>
-            </span>
-          </div>
+  return (
+    <header className="border-b border-[var(--divider)] bg-[var(--surface)] backdrop-blur-md sticky top-0 z-40 transition-colors duration-200 shadow-xs font-mono">
+      {/* Primary Authoritative Navigation Bar */}
+      <div className="px-4 py-2 flex items-center justify-between gap-3 border-b border-[var(--divider)]">
+        {/* Left: Singular Brand Identity + Nav Links */}
+        <div className="flex items-center gap-4">
+          <Link
+            href="/"
+            onClick={() => playTick("click")}
+            className="flex items-center gap-2 group cursor-pointer focus:outline-none"
+            title="AlphaFlow Quantitative Intelligence"
+          >
+            <div className="w-7 h-7 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] flex items-center justify-center p-0.5 shadow-2xs group-hover:border-[var(--accent-border)] transition">
+              <BrandLogo variant="icon" size="sm" priority />
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-sm font-bold tracking-wider text-[var(--text-primary)]">
+                ALPHAFLOW
+              </span>
+              <span className="hidden sm:inline px-1 py-0.2 rounded text-[9px] font-mono text-[var(--text-muted)] border border-[var(--divider)] bg-[var(--surface-subtle)]">
+                v2.4
+              </span>
+            </div>
+          </Link>
+
+          {/* Dedicated Page Navigation Tabs */}
+          <nav aria-label="Terminal Navigation" className="hidden lg:flex items-center gap-1 border-l border-[var(--divider)] pl-3">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => playTick("click")}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition btn-tactile ${
+                    isActive
+                      ? "bg-[var(--accent-dim)] text-[var(--accent)] border border-[var(--accent-border)] font-semibold shadow-2xs"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] border border-transparent"
+                  }`}
+                >
+                  <Icon size={13} weight={isActive ? "bold" : "regular"} />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* SLA Badge */}
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-[var(--risk-success-border)] bg-[var(--risk-success-bg)] text-[var(--risk-success)] font-mono text-[11px]">
-            <ShieldCheck size={14} weight="bold" />
-            <span>SLA: {slaSeconds}s ({slaStatus})</span>
+        {/* Center: Search Trigger (Command Palette) */}
+        <div className="flex-1 max-w-xs hidden md:block">
+          <button
+            onClick={() => {
+              playTick("click");
+              onSearchClick();
+            }}
+            className="w-full flex items-center justify-between px-2.5 py-1 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs transition btn-tactile cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5 truncate">
+              <MagnifyingGlass size={13} weight="bold" />
+              <span className="text-[11px]">Search assets, factors...</span>
+            </span>
+            <kbd className="px-1.5 py-0.2 rounded bg-[var(--surface)] border border-[var(--divider)] text-[9px] font-mono">
+              ⌘K
+            </kbd>
+          </button>
+        </div>
+
+        {/* Right: Market Clocks + SLA + Cadence + Utilities */}
+        <div className="flex items-center gap-2">
+          {/* World Clocks (Collapses on Mobile) */}
+          <div className="hidden xl:flex items-center gap-2 text-[11px] text-[var(--text-secondary)] border-r border-[var(--divider)] pr-2" suppressHydrationWarning>
+            <span className="flex items-center gap-1">
+              <Clock size={12} weight="bold" className="text-[var(--text-muted)]" />
+              <span className="text-[var(--text-muted)]">NY:</span>
+              <span className="text-[var(--text-primary)] font-semibold" suppressHydrationWarning>{times.ny || "16:00"}</span>
+            </span>
+            <span className="opacity-30">/</span>
+            <span className="flex items-center gap-1">
+              <span className="text-[var(--text-muted)]">MUM:</span>
+              <span className="text-[var(--text-primary)] font-semibold" suppressHydrationWarning>{times.ist || "15:30"}</span>
+            </span>
+            <span className="opacity-30">/</span>
+            <span className="flex items-center gap-1">
+              <span className="text-[var(--text-muted)]">UTC:</span>
+              <span className="text-[var(--text-primary)] font-semibold" suppressHydrationWarning>{times.utc || "20:00"}</span>
+            </span>
           </div>
 
-          {/* Refresh Cadence */}
-          <div className="flex items-center gap-1 bg-[var(--surface)] border border-[var(--divider)] rounded px-1.5 py-0.5 text-[11px] font-mono">
-            <ArrowsClockwise size={13} weight="bold" className={`text-[var(--text-muted)] ${refreshInterval > 0 ? "animate-spin" : ""}`} style={{ animationDuration: "6s" }} />
+          {/* SLA Badge */}
+          <div 
+            className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded border border-[var(--risk-success-border)] bg-[var(--risk-success-bg)] text-[var(--risk-success)] text-[10px]"
+            title={`Pandera SLA: ${slaSeconds}s (${slaStatus}) • Last Synced: ${lastUpdated}`}
+          >
+            <ShieldCheck size={12} weight="bold" />
+            <span>SLA: {slaSeconds}s</span>
+          </div>
+
+          {/* Refresh Cadence & Real-time Trigger */}
+          <div className="flex items-center gap-1 bg-[var(--surface-subtle)] border border-[var(--divider)] rounded px-1.5 py-0.5 text-[10px]">
+            <button
+              onClick={() => {
+                playTick("click");
+                if (onRefreshData) onRefreshData();
+              }}
+              disabled={isRefreshing}
+              className="p-0.5 hover:text-[var(--accent)] transition cursor-pointer disabled:opacity-50"
+              title="Sync latest market data now"
+            >
+              <ArrowsClockwise 
+                size={12} 
+                weight="bold" 
+                className={`${isRefreshing || refreshInterval > 0 ? "animate-spin text-[var(--accent)]" : "text-[var(--text-muted)]"}`} 
+                style={{ animationDuration: isRefreshing ? "1s" : "6s" }} 
+              />
+            </button>
             <select
               value={refreshInterval}
               onChange={(e) => {
                 playTick("click");
                 setRefreshInterval(Number(e.target.value));
               }}
-              className="bg-transparent text-[var(--text-primary)] focus:outline-none cursor-pointer py-0.5 text-[10px]"
+              className="bg-transparent text-[var(--text-primary)] focus:outline-none cursor-pointer py-0.5 text-[10px] pr-1"
             >
-              <option value={5}>LIVE (5s)</option>
+              <option value={5}>LIVE 5s</option>
               <option value={15}>15s</option>
               <option value={60}>60s</option>
               <option value={0}>PAUSED</option>
             </select>
           </div>
+
+          {/* AI Alpha Analyst Assistant */}
+          {onOpenAnalyst && (
+            <button
+              onClick={() => {
+                playTick("click");
+                onOpenAnalyst();
+              }}
+              className="px-2 py-0.5 rounded border border-[var(--accent-border)] bg-[var(--accent-dim)] hover:bg-[var(--accent)] hover:text-white text-[var(--accent)] text-[11px] flex items-center gap-1 transition btn-tactile font-semibold cursor-pointer"
+              title="Open AI Analyst Assistant (A)"
+            >
+              <Robot size={13} weight="bold" />
+              <span className="hidden sm:inline">Analyst</span>
+            </button>
+          )}
+
+          {/* Research Tear-Sheet PDF */}
+          {onOpenReport && (
+            <button
+              onClick={() => {
+                playTick("click");
+                onOpenReport();
+              }}
+              className="hidden md:flex px-2 py-0.5 rounded border border-[var(--divider)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-[11px] items-center gap-1 transition btn-tactile"
+              title="Print Tear-Sheet (R)"
+            >
+              <FileText size={12} weight="bold" />
+              <span>PDF</span>
+            </button>
+          )}
+
+          {/* Export CSV / JSON */}
+          <div className="hidden 2xl:flex items-center gap-1">
+            <button
+              onClick={() => {
+                playTick("click");
+                onExportJson();
+              }}
+              className="px-1.5 py-0.5 rounded border border-[var(--divider)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-muted)] text-[10px] transition btn-tactile"
+              title="Export JSON"
+            >
+              JSON
+            </button>
+            <button
+              onClick={() => {
+                playTick("click");
+                onExportCsv();
+              }}
+              className="px-1.5 py-0.5 rounded border border-[var(--divider)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-muted)] text-[10px] transition btn-tactile"
+              title="Export CSV"
+            >
+              CSV
+            </button>
+          </div>
+
+          {/* Macro Context Drawer */}
+          {onOpenMacro && (
+            <button
+              onClick={() => {
+                playTick("click");
+                onOpenMacro();
+              }}
+              className="p-1 rounded border border-[var(--divider)] hover:border-[var(--accent-border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition btn-tactile cursor-pointer"
+              title="Macro Context (M)"
+            >
+              <Globe size={14} weight="bold" />
+            </button>
+          )}
 
           {/* Sound Toggle */}
           <button
@@ -153,125 +313,67 @@ export const Header: React.FC<HeaderProps> = ({
               playTick("toggle");
               onToggleTheme();
             }}
-            className="p-1 rounded border border-[var(--divider)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-primary)] transition flex items-center gap-1 text-[11px] btn-tactile"
-            title={isDark ? "Switch to Editorial Light" : "Switch to Drafting Dark"}
+            className="p-1 rounded border border-[var(--divider)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-primary)] transition flex items-center justify-center btn-tactile"
+            title={isDark ? "Switch to Light Mode (T)" : "Switch to Dark Mode (T)"}
           >
             {isDark ? <Sun size={14} weight="bold" className="text-amber-400" /> : <Moon size={14} weight="bold" className="text-[var(--accent)]" />}
           </button>
 
-          {/* Keyboard Shortcuts Help */}
+          {/* Keyboard Shortcuts (?) */}
           <button
             onClick={() => {
               playTick("click");
               onOpenShortcuts();
             }}
-            className="p-1 rounded border border-[var(--divider)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] transition btn-tactile"
+            className="p-1 rounded border border-[var(--divider)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] transition btn-tactile cursor-pointer"
             title="Keyboard Shortcuts (?)"
           >
             <Question size={14} weight="bold" />
           </button>
-
-          {/* Export Dropdown & Tear-Sheet PDF */}
-          <div className="flex items-center gap-1.5">
-            {onOpenReport && (
-              <button
-                onClick={() => {
-                  playTick("click");
-                  onOpenReport();
-                }}
-                className="px-2.5 py-0.5 rounded border border-[var(--accent-border)] bg-[var(--accent-dim)] hover:bg-[var(--accent)] hover:text-white text-[var(--accent)] text-[11px] font-mono flex items-center gap-1.5 transition btn-tactile font-semibold shadow-xs"
-                title="Generate Institutional Research Tear-Sheet (Print / PDF)"
-              >
-                <FileText size={13} weight="bold" />
-                <span>Tear-Sheet (PDF)</span>
-              </button>
-            )}
-            <button
-              onClick={() => {
-                playTick("click");
-                onExportJson();
-              }}
-              className="px-2 py-0.5 rounded border border-[var(--divider)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-primary)] text-[11px] font-mono flex items-center gap-1 transition btn-tactile"
-              title="Download Full Mart Data (JSON)"
-            >
-              <DownloadSimple size={13} weight="bold" />
-              JSON
-            </button>
-            <button
-              onClick={() => {
-                playTick("click");
-                onExportCsv();
-              }}
-              className="px-2 py-0.5 rounded border border-[var(--divider)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-primary)] text-[11px] font-mono flex items-center gap-1 transition btn-tactile"
-              title="Download Constituents CSV"
-            >
-              CSV
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* Main Terminal Bar & Live Ticker Strip */}
-      <div className="px-4 py-2.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div className="flex items-center justify-between lg:justify-start gap-4">
-          <div className="flex items-center gap-2.5">
-            {/* Bespoke Institutional Precision Vector Logo Mark */}
-            <div className="w-8 h-8 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] flex items-center justify-center p-1.5 shadow-xs">
-              <svg viewBox="0 0 32 32" fill="none" className="w-full h-full text-[var(--accent)]">
-                <path d="M5 24L14 7L18 15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M14 24L23 7L27 15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
-                <circle cx="15.5" cy="17.5" r="2.5" fill="currentColor" />
-              </svg>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-bold tracking-tight text-[var(--text-primary)] font-mono">
-                  AlphaFlow Terminal
-                </h1>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono text-[var(--text-muted)] border border-[var(--divider)] bg-[var(--surface-subtle)]">
-                  S&P 500 + NSE
-                </span>
-              </div>
-              <p className="text-[11px] text-[var(--text-muted)] font-mono">
-                Vectorized technical factor pipeline
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => {
-              playTick("click");
-              onSearchClick();
-            }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xs font-mono transition btn-tactile"
-          >
-            <MagnifyingGlass size={14} weight="bold" className="text-[var(--text-muted)]" />
-            <span className="hidden sm:inline">Search symbol, sector or factor...</span>
-            <span className="sm:hidden">Search</span>
-            <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-[var(--surface)] border border-[var(--divider)] text-[10px] text-[var(--text-muted)] font-mono">
-              ⌘K
-            </kbd>
-          </button>
+      {/* Secondary Ribbon: Mobile Nav (if small screen) + Live Smooth Benchmark Marquee */}
+      <div className="px-4 py-1 flex items-center justify-between gap-3 bg-[var(--surface-subtle)] text-xs">
+        {/* Mobile Nav Links */}
+        <div className="flex lg:hidden items-center gap-1 overflow-x-auto py-0.5 text-[11px]">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => playTick("click")}
+                className={`px-2 py-0.5 rounded whitespace-nowrap ${
+                  isActive
+                    ? "bg-[var(--accent-dim)] text-[var(--accent)] font-semibold"
+                    : "text-[var(--text-secondary)]"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
 
-        {/* Live Smooth Benchmark Marquee Ticker */}
-        <div className="w-full lg:max-w-xl overflow-hidden font-mono">
+        {/* Benchmark Marquee */}
+        <div className="w-full overflow-hidden">
           <Marquee speedSeconds={40} pauseOnHover={true}>
             {benchmarks.map((bm) => {
               const isPos = bm.change.startsWith("+");
               return (
                 <div
                   key={bm.ticker}
-                  className="flex-shrink-0 px-2.5 py-1 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] flex items-center gap-2 text-xs transition hover:border-[var(--accent-border)]"
+                  className="flex-shrink-0 px-2 py-0.5 rounded border border-[var(--divider)] bg-[var(--surface)] flex items-center gap-1.5 text-[11px] transition hover:border-[var(--accent-border)]"
                 >
                   <span className="font-semibold text-[var(--text-secondary)]">{bm.ticker}</span>
                   <span className="text-[var(--text-primary)] tabular-nums font-bold">{bm.value}</span>
                   <span
-                    className={`text-[11px] font-bold tabular-nums flex items-center gap-0.5 ${
+                    className={`text-[10px] font-bold tabular-nums flex items-center gap-0.5 ${
                       isPos ? "text-emerald-500" : "text-rose-500"
                     }`}
                   >
-                    {isPos ? <TrendUp size={12} weight="bold" /> : <TrendDown size={12} weight="bold" />}
+                    {isPos ? <TrendUp size={11} weight="bold" /> : <TrendDown size={11} weight="bold" />}
                     {bm.change}
                   </span>
                 </div>

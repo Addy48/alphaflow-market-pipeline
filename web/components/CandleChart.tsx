@@ -36,18 +36,17 @@ export const CandleChart: React.FC<CandleChartProps> = ({
     return symbols.find((s) => s.symbol === selectedSymbol) || symbols[0];
   }, [symbols, selectedSymbol]);
 
-  // Compute Alpha Score for current symbol
+  // Compute Alpha Score for current symbol (Authoritative Multi-Factor Formula)
   const alphaScore = useMemo(() => {
     if (!currentSymbol) return 50;
-    return Math.min(
-      100,
-      Math.max(
-        0,
-        currentSymbol.rsi_14 * 0.35 +
-        (100 - Math.min(currentSymbol.volatility_30d, 50) * 1.6) * 0.25 +
-        Math.min(currentSymbol.sharpe_proxy * 28, 100) * 0.25 +
-        currentSymbol.bollinger_pct_b * 15
-      )
+    const momNorm = currentSymbol.rsi_14;
+    const volNorm = Math.max(0, 100 - currentSymbol.volatility_30d * 2.2);
+    const sharpeNorm = Math.min(100, Math.max(0, currentSymbol.sharpe_proxy * 35));
+    const revNorm = Math.max(0, (1 - currentSymbol.bollinger_pct_b) * 100);
+    return (
+      Math.round(
+        ((momNorm * 35 + volNorm * 25 + sharpeNorm * 25 + revNorm * 15) / 100) * 10
+      ) / 10
     );
   }, [currentSymbol]);
 
@@ -166,7 +165,22 @@ export const CandleChart: React.FC<CandleChartProps> = ({
   return (
     <div className="bg-[var(--surface)] border border-[var(--divider)] rounded-lg overflow-hidden flex flex-col font-mono text-xs shadow-subtle transition-colors duration-200">
       {/* Workspace Header & Quick Symbol Switcher */}
-      <div className="p-3 border-b border-[var(--divider)] bg-[var(--surface-subtle)] flex flex-col gap-3">
+      <div className="p-3 border-b border-[var(--divider)] bg-[var(--surface-subtle)] flex flex-col gap-2.5">
+        {/* Institutional Workspace Banner */}
+        <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] border-b border-[var(--divider)] pb-2 mb-0.5">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[var(--text-primary)] uppercase tracking-wider">
+              Technical Candlestick Workspace
+            </span>
+            <span className="text-[var(--divider-strong)]">·</span>
+            <span>Multi-Timeframe OHLCV & Quantitative Indicators</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-1.5 py-0.2 rounded bg-[var(--surface)] border border-[var(--divider)] text-[var(--accent)] font-bold">HOTKEY: 2</span>
+            <span>Resolution: 1D</span>
+          </div>
+        </div>
+
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -803,7 +817,6 @@ export const CandleChart: React.FC<CandleChartProps> = ({
             <RadialGauge
               score={alphaScore}
               label="COMPOSITE SCORE"
-              sublabel={currentSymbol.regime.replace(/_/g, " ")}
               size={175}
             />
           </div>

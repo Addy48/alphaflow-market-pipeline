@@ -9,7 +9,8 @@ import {
   SlidersHorizontal,
   Eye,
   ChartBar,
-  FileText
+  FileText,
+  Star
 } from "@phosphor-icons/react";
 import { SymbolData } from "../types/market";
 import { SignalMatrix } from "./SignalMatrix";
@@ -18,11 +19,14 @@ import { StockDossier } from "./StockDossier";
 import { AreaSparkline } from "./AreaSparkline";
 import { playTick } from "../utils/audio";
 import { runFactorKMeans, ClusteredSymbol } from "../utils/kmeans";
+import { getWatchlist, toggleWatchlist } from "../utils/watchlist";
 
 interface ScreenerTableProps {
   symbols: SymbolData[];
   onOpenChart: (symbol: string) => void;
   onOpenReport?: (symbol: string) => void;
+  showWatchlistOnly?: boolean;
+  onToggleWatchlistFilter?: () => void;
 }
 
 type SortField = "symbol" | "price" | "change_1d" | "volatility_30d" | "rsi_14" | "bollinger_pct_b" | "sharpe_proxy" | "composite_score";
@@ -30,7 +34,9 @@ type SortField = "symbol" | "price" | "change_1d" | "volatility_30d" | "rsi_14" 
 export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   symbols,
   onOpenChart,
-  onOpenReport
+  onOpenReport,
+  showWatchlistOnly: propShowWatchlistOnly,
+  onToggleWatchlistFilter
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [exchangeFilter, setExchangeFilter] = useState<string>("ALL");
@@ -39,6 +45,29 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   const [strategyPreset, setStrategyPreset] = useState<string>("ALL");
   const [showSimulator, setShowSimulator] = useState(false);
   const [selectedDossierSymbol, setSelectedDossierSymbol] = useState<string | null>("NVDA");
+
+  // Watchlist state — supports controlled or uncontrolled
+  const [watchlist, setWatchlist] = useState<string[]>(() => getWatchlist());
+  const [internalWatchlistOnly, setInternalWatchlistOnly] = useState(false);
+
+  const isWatchlistFilterActive =
+    propShowWatchlistOnly !== undefined ? propShowWatchlistOnly : internalWatchlistOnly;
+
+  const toggleWatchlistFilter = () => {
+    playTick("toggle");
+    if (onToggleWatchlistFilter) {
+      onToggleWatchlistFilter();
+    } else {
+      setInternalWatchlistOnly((prev) => !prev);
+    }
+  };
+
+  const handleToggleWatchlist = (e: React.MouseEvent, symbol: string) => {
+    e.stopPropagation();
+    playTick("toggle");
+    toggleWatchlist(symbol);
+    setWatchlist(getWatchlist());
+  };
 
   // Dynamic K-Means Factor Clustering
   const { clusteredSymbols, clusters } = useMemo(() => {
@@ -97,6 +126,9 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   // Filtering & Sorting
   const filteredSymbols = useMemo(() => {
     return symbolsWithScores.filter((s) => {
+      // Watchlist filter — applied first
+      if (isWatchlistFilterActive && !watchlist.includes(s.symbol)) return false;
+
       const matchesSearch =
         s.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -138,7 +170,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       const numB = Number(bVal) || 0;
       return sortOrder === "asc" ? numA - numB : numB - numA;
     });
-  }, [symbolsWithScores, searchQuery, exchangeFilter, sectorFilter, clusterFilter, strategyPreset, sortField, sortOrder, clusterBySymbol]);
+  }, [symbolsWithScores, searchQuery, exchangeFilter, sectorFilter, clusterFilter, strategyPreset, sortField, sortOrder, clusterBySymbol, watchlist, isWatchlistFilterActive]);
 
   const handleSort = (field: SortField) => {
     playTick("click");
@@ -153,6 +185,36 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   const handleRowClick = (symbol: string) => {
     playTick("click");
     setSelectedDossierSymbol((prev) => (prev === symbol ? null : symbol));
+  };
+
+  const handleRowKeyDown = (e: React.KeyboardEvent, symbol: string, index: number) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleRowClick(symbol);
+    } else if (e.key === " ") {
+      e.preventDefault();
+      toggleWatchlist(symbol);
+      setWatchlist(getWatchlist());
+      playTick("toggle");
+    } else if (e.key.toLowerCase() === "c") {
+      e.preventDefault();
+      playTick("blip");
+      onOpenChart(symbol);
+    } else if (e.key.toLowerCase() === "r" && onOpenReport) {
+      e.preventDefault();
+      playTick("click");
+      onOpenReport(symbol);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const rows = document.querySelectorAll<HTMLElement>("[data-screener-row]");
+      const next = rows[index + 1];
+      next?.focus();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const rows = document.querySelectorAll<HTMLElement>("[data-screener-row]");
+      const prev = rows[index - 1];
+      prev?.focus();
+    }
   };
 
   const activeDossierItem = useMemo(() => {
@@ -176,7 +238,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Factor Weighting Toggle */}
               <button
                 onClick={() => {
@@ -191,6 +253,20 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               >
                 <SlidersHorizontal size={13} weight="bold" />
                 <span>Strategy Weights</span>
+              </button>
+
+              {/* Watchlist Toggle */}
+              <button
+                onClick={toggleWatchlistFilter}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px] transition btn-tactile cursor-pointer ${
+                  isWatchlistFilterActive
+                    ? "border-amber-400/60 bg-amber-400/15 text-amber-500 font-bold shadow-xs ring-1 ring-amber-400/30"
+                    : "border-[var(--divider)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--divider-strong)]"
+                }`}
+                title={`Toggle Watchlist Filter (W) — ${watchlist.length} pinned`}
+              >
+                <Star size={13} weight={isWatchlistFilterActive ? "fill" : "regular"} className={isWatchlistFilterActive ? "text-amber-500" : ""} />
+                <span>Watchlist{watchlist.length > 0 ? ` (${watchlist.length})` : ""}</span>
               </button>
 
               {/* Quick Search */}
@@ -299,9 +375,9 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
         </div>
 
         {/* Master-Detail Split Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[var(--divider)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[var(--divider)] min-w-0">
           {/* Main Data Table */}
-          <div className={`${activeDossierItem ? "lg:col-span-8 xl:col-span-9" : "lg:col-span-12"} overflow-x-auto transition-all duration-200`}>
+          <div className={`${activeDossierItem ? "lg:col-span-8 xl:col-span-9" : "lg:col-span-12"} min-w-0 overflow-x-auto transition-all duration-200`}>
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-[var(--divider)] bg-[var(--surface-subtle)] text-[10px] text-[var(--text-muted)]">
@@ -403,21 +479,67 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   >
                     ACTION
                   </th>
+                  <th
+                    className="py-2.5 px-2 font-semibold text-center w-8"
+                    title="Pin to Watchlist"
+                  >
+                    <Star size={11} weight="regular" />
+                  </th>
                 </tr>
               </thead>
 
+              {/* Empty state — shown when filters produce 0 results */}
+              {filteredSymbols.length === 0 && (
+                <tbody>
+                  <tr>
+                    <td colSpan={12} className="py-16 text-center text-[var(--text-muted)] font-mono">
+                      <div className="flex flex-col items-center gap-2">
+                        <SlidersHorizontal size={32} weight="thin" className="opacity-30" />
+                        <div className="text-sm font-semibold text-[var(--text-secondary)]">
+                          No equities match current filters
+                        </div>
+                        <div className="text-xs">
+                          {isWatchlistFilterActive && watchlist.length === 0
+                            ? "Your watchlist is empty. Click the star icon on any row to pin an equity."
+                            : "Try adjusting exchange, sector, cluster, or preset filters"}
+                        </div>
+                        <button
+                          onClick={() => {
+                            setExchangeFilter("ALL");
+                            setSectorFilter("ALL");
+                            setClusterFilter("ALL");
+                            setStrategyPreset("ALL");
+                            setSearchQuery("");
+                            if (isWatchlistFilterActive) toggleWatchlistFilter();
+                          }}
+                          className="mt-2 px-3 py-1 rounded border border-[var(--accent-border)] bg-[var(--accent-dim)] text-[var(--accent)] text-xs font-mono hover:bg-[var(--accent)] hover:text-white transition btn-tactile cursor-pointer"
+                        >
+                          Reset All Filters
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              )}
+
               <tbody className="divide-y divide-[var(--divider)]">
-                {filteredSymbols.map((item) => {
+                {filteredSymbols.map((item, index) => {
                   const isPos = item.change_1d >= 0;
                   const currencyPrefix = item.exchange === "NSE" ? "₹" : "$";
                   const isSelected = selectedDossierSymbol === item.symbol;
                   const cluster = clusterBySymbol[item.symbol];
+                  const isPinned = watchlist.includes(item.symbol);
 
                    return (
                     <tr
                       key={item.symbol}
+                      role="row"
+                      tabIndex={0}
+                      data-screener-row
+                      aria-selected={isSelected}
                       onClick={() => handleRowClick(item.symbol)}
-                      className={`hover:bg-[var(--surface-hover)] transition cursor-pointer group ${
+                      onKeyDown={(e) => handleRowKeyDown(e, item.symbol, index)}
+                      className={`hover:bg-[var(--surface-hover)] focus:outline-none focus:bg-[var(--surface-hover)] transition cursor-pointer group ${
                         isSelected ? "bg-[var(--surface-active)]" : ""
                       }`}
                     >
@@ -468,17 +590,32 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
                       {/* Dynamic Alpha Score */}
                       <td className="py-2 px-2 text-center">
-                        <span
-                          className={`inline-block px-1.5 py-0.5 rounded font-black text-xs tabular-nums ${
-                            item.composite_score >= 70
-                              ? "bg-[var(--risk-success-bg)] text-[var(--risk-success)] border border-[var(--risk-success-border)]"
-                              : item.composite_score >= 50
-                              ? "bg-[var(--accent-dim)] text-[var(--accent)] border border-[var(--accent-border)]"
-                              : "bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-[var(--divider)]"
-                          }`}
-                        >
-                          {item.composite_score.toFixed(1)}
-                        </span>
+                        <div className="inline-flex flex-col items-center gap-0.5">
+                          <span
+                            className={`inline-block px-1.5 py-0.5 rounded font-black text-xs tabular-nums ${
+                              item.composite_score >= 70
+                                ? "bg-[var(--risk-success-bg)] text-[var(--risk-success)] border border-[var(--risk-success-border)]"
+                                : item.composite_score >= 50
+                                ? "bg-[var(--accent-dim)] text-[var(--accent)] border border-[var(--accent-border)]"
+                                : "bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-[var(--divider)]"
+                            }`}
+                          >
+                            {item.composite_score.toFixed(1)}
+                          </span>
+                          {/* Thin progress bar beneath badge */}
+                          <div className="w-10 h-0.5 rounded-full bg-[var(--divider)] overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                item.composite_score >= 70
+                                  ? "bg-[var(--risk-success)]"
+                                  : item.composite_score >= 50
+                                  ? "bg-[var(--accent)]"
+                                  : "bg-[var(--text-muted)]"
+                              }`}
+                              style={{ width: `${Math.max(2, Math.min(100, item.composite_score))}%` }}
+                            />
+                          </div>
+                        </div>
                       </td>
 
                       {/* Spot Price */}
@@ -586,6 +723,21 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                             <ChartBar size={13} weight="bold" />
                           </button>
                         </div>
+                      </td>
+
+                      {/* Star / Watchlist Pin */}
+                      <td className="py-2 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => handleToggleWatchlist(e, item.symbol)}
+                          className={`p-1 rounded transition hover:scale-110 active:scale-95 ${
+                            isPinned
+                              ? "text-amber-400"
+                              : "text-[var(--text-muted)] opacity-0 group-hover:opacity-60 hover:!opacity-100"
+                          }`}
+                          title={isPinned ? "Remove from Watchlist" : "Add to Watchlist"}
+                        >
+                          <Star size={14} weight={isPinned ? "fill" : "regular"} />
+                        </button>
                       </td>
                     </tr>
                   );

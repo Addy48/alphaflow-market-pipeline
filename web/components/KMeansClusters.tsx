@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from "react";
 import { 
-  Graph, 
   Target, 
   ChartPolar, 
   TrendUp, 
@@ -12,7 +11,7 @@ import {
   Info
 } from "@phosphor-icons/react";
 import { SymbolData } from "../types/market";
-import { runFactorKMeans, ClusterInfo, ClusteredSymbol } from "../utils/kmeans";
+import { runFactorKMeans, ClusteredSymbol } from "../utils/kmeans";
 import { playTick } from "../utils/audio";
 
 interface KMeansClustersProps {
@@ -49,7 +48,7 @@ export const KMeansClusters: React.FC<KMeansClustersProps> = ({
   // Projection onto 600x380 SVG coordinates
   const svgWidth = 640;
   const svgHeight = 360;
-  const padLeft = 55;
+  const padLeft = 100;
   const padRight = 30;
   const padTop = 30;
   const padBottom = 45;
@@ -97,7 +96,7 @@ export const KMeansClusters: React.FC<KMeansClustersProps> = ({
         <div className="flex items-center gap-2">
           <ChartPolar size={16} weight="bold" className="text-[var(--accent)]" />
           <span className="text-[var(--text-primary)] font-bold uppercase tracking-wider text-xs">
-            K-Means Factor Cluster Decomposition (4-Dimensional Model)
+            K-Means Factor Cluster Decomposition · Factor Clustering Archetypes
           </span>
           <span className="px-1.5 py-0.5 rounded bg-[var(--surface)] border border-[var(--divider)] text-[var(--text-muted)] text-[10px]">
             k = 4 CENTROIDS
@@ -202,22 +201,30 @@ export const KMeansClusters: React.FC<KMeansClustersProps> = ({
                   <text x={getX(25)} y={svgHeight - padBottom + 16}>25% Vol</text>
                   <text x={getX(35)} y={svgHeight - padBottom + 16}>35%</text>
                   <text x={getX(45)} y={svgHeight - padBottom + 16}>45%</text>
-                  <text x={(svgWidth + padLeft) / 2} y={svgHeight - 10} className="uppercase tracking-widest text-[10px]">
+                  <text x={(padLeft + svgWidth - padRight) / 2} y={svgHeight - 10} className="uppercase tracking-widest text-[10px]">
                     Annualized 30D Realized Volatility →
                   </text>
                 </g>
 
                 {/* Y Axis Labels (RSI-14) */}
-                <g fill="currentColor" fillOpacity="0.6" className="text-[9px] font-bold" textAnchor="end">
-                  <text x={padLeft - 8} y={getY(30) + 3}>30 (Oversold)</text>
-                  <text x={padLeft - 8} y={getY(50) + 3}>50 (Neutral)</text>
-                  <text x={padLeft - 8} y={getY(70) + 3}>70 (Overbought)</text>
+                <g fill="currentColor" fillOpacity="0.7" className="text-[9px] font-bold" textAnchor="end">
+                  <text x={padLeft - 8} y={getY(30) + 3}>
+                    30 <tspan fillOpacity="0.45" className="font-normal text-[8px]">(Oversold)</tspan>
+                  </text>
+                  <text x={padLeft - 8} y={getY(50) + 3}>
+                    50 <tspan fillOpacity="0.45" className="font-normal text-[8px]">(Neutral)</tspan>
+                  </text>
+                  <text x={padLeft - 8} y={getY(70) + 3}>
+                    70 <tspan fillOpacity="0.45" className="font-normal text-[8px]">(Overbought)</tspan>
+                  </text>
                   <text
-                    x={-svgHeight / 2}
-                    y={14}
+                    x={-((svgHeight - padBottom + padTop) / 2)}
+                    y={16}
                     transform="rotate(-90)"
                     textAnchor="middle"
-                    className="uppercase tracking-widest text-[10px]"
+                    className="uppercase tracking-widest text-[9.5px] font-semibold"
+                    fill="currentColor"
+                    fillOpacity="0.55"
                   >
                     Wilder RSI-14 (Momentum) →
                   </text>

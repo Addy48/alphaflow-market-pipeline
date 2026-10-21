@@ -25,6 +25,24 @@ export const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({ matrix }) 
 
   const activePair = selectedPair || defaultPair;
 
+  // Universe correlation distribution for percentile calculation (UX-8)
+  const { percentileOf } = useMemo(() => {
+    const allVals: number[] = [];
+    matrix.forEach((row) => {
+      Object.entries(row.correlations).forEach(([col, val]) => {
+        if (row.symbol !== col) allVals.push(val);
+      });
+    });
+    const sorted = [...allVals].sort((a, b) => a - b);
+    const pOf = (v: number) => {
+      if (sorted.length === 0) return 50;
+      const idx = sorted.findIndex((c) => c >= v);
+      const pos = idx === -1 ? sorted.length : idx;
+      return Math.round((pos / sorted.length) * 100);
+    };
+    return { percentileOf: pOf };
+  }, [matrix]);
+
   const symbols = matrix.map((m) => m.symbol);
 
   const getCellColor = (val: number, isSelf: boolean) => {
@@ -129,6 +147,11 @@ export const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({ matrix }) 
                     {hoveredVal >= 0 ? "+" : ""}
                     {hoveredVal.toFixed(2)}
                   </span>
+                  {hoveredCell.row !== hoveredCell.col && (
+                    <span className="text-[var(--text-muted)] text-[10px] ml-1">
+                      ({percentileOf(hoveredVal)}th %ile)
+                    </span>
+                  )}
                 </span>
                 <span className="text-[var(--text-muted)] hidden sm:inline">|</span>
                 <span className="text-[var(--text-secondary)] italic hidden sm:inline">
@@ -152,9 +175,9 @@ export const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({ matrix }) 
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-w-0">
             <div className="inline-block min-w-full">
-              <div className="grid" style={{ gridTemplateColumns: `80px repeat(${symbols.length}, minmax(58px, 1fr))` }}>
+              <div className="grid" style={{ gridTemplateColumns: `84px repeat(${symbols.length}, minmax(58px, 1fr))` }}>
                 {/* Corner */}
                 <div className="p-2 border-b border-r border-[var(--divider)] bg-[var(--surface-subtle)] text-[var(--text-muted)] text-[10px] flex items-center justify-center font-bold">
                   TICKER
@@ -166,14 +189,23 @@ export const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({ matrix }) 
                   return (
                     <div
                       key={`col-${sym}`}
-                      className={`p-2 border-b border-[var(--divider)] text-center font-bold text-[10px] truncate transition-all duration-150 ${
+                      className={`p-1.5 border-b border-[var(--divider)] text-center font-bold text-[10px] transition-all duration-150 flex flex-col items-center justify-center gap-0.5 ${
                         isColHovered
                           ? "bg-[var(--surface-hover)] text-[var(--text-primary)] font-black border-b-[var(--accent)]"
                           : "bg-[var(--surface-subtle)] text-[var(--text-secondary)]"
                       }`}
                       title={sym}
                     >
-                      {sym.replace(".NS", "")}
+                      <span className="truncate max-w-full">{sym.replace(".NS", "")}</span>
+                      {sym.includes(".NS") ? (
+                        <span className="text-[7.5px] px-1 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/40 font-semibold leading-tight">
+                          IN
+                        </span>
+                      ) : (
+                        <span className="text-[7.5px] px-1 py-0.2 rounded bg-blue-50 text-blue-800 border border-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/40 font-semibold leading-tight opacity-70">
+                          US
+                        </span>
+                      )}
                     </div>
                   );
                 })}
@@ -192,9 +224,13 @@ export const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({ matrix }) 
                         title={row.symbol}
                       >
                         <span>{row.symbol.replace(".NS", "")}</span>
-                        {row.symbol.includes(".NS") && (
+                        {row.symbol.includes(".NS") ? (
                           <span className="text-[8px] px-1 rounded bg-amber-50 text-amber-800 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/40 font-semibold">
                             IN
+                          </span>
+                        ) : (
+                          <span className="text-[8px] px-1 rounded bg-blue-50 text-blue-800 border border-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/40 font-semibold opacity-70">
+                            US
                           </span>
                         )}
                       </div>
@@ -221,6 +257,11 @@ export const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({ matrix }) 
                               playTick("click");
                               setSelectedPair({ symA: row.symbol, symB: targetSym, val });
                             }}
+                            title={
+                              isSelf
+                                ? "Collinear self-pair (1.00)"
+                                : `${row.symbol} ↔ ${targetSym}: r=${val >= 0 ? "+" : ""}${val.toFixed(2)} (${percentileOf(val)}th %ile across universe)`
+                            }
                             className={`p-2 border-b border-r border-[var(--divider)] text-center font-mono text-[11px] tabular-nums cursor-pointer transition-all duration-150 flex items-center justify-center relative select-none ${
                               isDirectHovered
                                 ? "ring-2 ring-[var(--accent)] scale-[1.08] z-20 font-black shadow-raised"

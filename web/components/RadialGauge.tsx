@@ -163,9 +163,9 @@ export const RadialGauge: React.FC<RadialGaugeProps> = ({
         {/* Status Pill Badge */}
         <g className="transition-all duration-300">
           <rect
-            x="24"
+            x="18"
             y="93"
-            width="112"
+            width="124"
             height="20"
             rx="10"
             fill={statusConfig.bg}
@@ -173,19 +173,18 @@ export const RadialGauge: React.FC<RadialGaugeProps> = ({
             strokeWidth="1"
           />
           <circle
-            cx="34"
+            cx="28"
             cy="103"
             r="2.5"
-            fill="currentColor"
-            className="text-[var(--text-primary)]"
+            fill={statusConfig.darkColor}
           />
           <text
-            x="76"
+            x="82"
             y="106.5"
             textAnchor="middle"
-            className="font-bold tracking-wider uppercase text-[var(--text-primary)]"
-            fill="currentColor"
-            fontSize="7"
+            className="font-bold tracking-wider uppercase"
+            fill={statusConfig.darkColor}
+            fontSize="7.5"
           >
             {sublabel || statusConfig.label}
           </text>

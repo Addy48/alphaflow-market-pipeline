@@ -21,6 +21,8 @@
 
   --divider: rgba(15, 23, 42, 0.09);
   --divider-strong: rgba(15, 23, 42, 0.18);
+  --divider-accent: rgba(37, 75, 114, 0.25);
+  --surface-raised-2: #F1F4F8;
 
   /* Precision Marine Steel Accent (No neon cyan) */
   --accent: #254B72;
@@ -75,6 +77,8 @@
 
   --divider: #1E2738;
   --divider-strong: #2B384F;
+  --divider-accent: rgba(91, 138, 181, 0.35);
+  --surface-raised-2: #1E2738;
 
   /* Restrained Structural Steel Accent (No neon cyan) */
   --accent: #5B8AB5;
@@ -117,7 +121,7 @@
 body {
   background-color: var(--canvas);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   overflow-x: hidden;
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -126,6 +130,35 @@ body {
 /* Tabular numbers for financial accuracy */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* Tactile button micro-interactions */
+.btn-tactile {
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 140ms ease,
+              border-color 140ms ease,
+              box-shadow 140ms ease,
+              color 140ms ease;
+  user-select: none;
+}
+.btn-tactile:active {
+  transform: scale(0.98);
+}
+
+/* Standardized focus states */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--accent);
+}
+
+/* Accessible focus ring for buttons and links */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--accent);
 }
 
 /* Hardware Accelerated Marquee */
@@ -178,18 +211,150 @@ body {
   background: var(--text-muted);
 }
 
-/* Print Styles for PDF Export */
-@media print {
-  body {
-    background: #FFFFFF !important;
-    color: #000000 !important;
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
-  .no-print, header, nav, button:not(.print-allow) {
+  .animate-marquee {
+    animation: none !important;
+    transform: none !important;
+  }
+  .btn-tactile:active {
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   ALPHAFLOW PRINT ENGINE & INSTITUTIONAL PDF STYLESHEET
+   Engineered for pixel-perfect A4 printing, zero modal artifacts,
+   and crisp vector typography.
+   ============================================================ */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm 12mm 12mm;
+  }
+
+  html, body {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide the rest of the application, navbar, footer, shortcuts, toolbars when printing */
+  .no-print,
+  header,
+  nav,
+  footer,
+  main,
+  button:not(.print-allow) {
     display: none !important;
   }
+
+  /* Unconstrain the modal completely for clean document flow */
+  .report-modal-backdrop {
+    position: static !important;
+    inset: auto !important;
+    background: #FFFFFF !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+
+  .report-modal-card {
+    position: static !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #FFFFFF !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   .print-area {
     padding: 0 !important;
+    margin: 0 !important;
     max-height: none !important;
     overflow: visible !important;
+    width: 100% !important;
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+  }
+
+  /* Section cards and containers */
+  .report-section {
+    border-color: #CBD5E1 !important;
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Prevent page cuts inside cards, metrics, and table rows */
+  .avoid-break,
+  .metric-card,
+  tr,
+  .cluster-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  .page-break-after {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  table {
+    page-break-inside: auto;
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  /* Force background colors on print */
+  .print-bg-slate {
+    background-color: #0F172A !important;
+    color: #FFFFFF !important;
+  }
+
+  .print-bg-subtle {
+    background-color: #F8FAFC !important;
+  }
+
+  .print-border {
+    border-color: #E2E8F0 !important;
   }
 }

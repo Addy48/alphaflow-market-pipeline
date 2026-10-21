@@ -31,16 +31,17 @@ export const StockDossier: React.FC<StockDossierProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
-  const alphaScore = Math.min(
-    100,
-    Math.max(
-      0,
-      symbol.rsi_14 * 0.35 +
-      (100 - Math.min(symbol.volatility_30d, 50) * 1.6) * 0.25 +
-      Math.min(symbol.sharpe_proxy * 28, 100) * 0.25 +
-      symbol.bollinger_pct_b * 15
-    )
-  );
+  const alphaScore = useMemo(() => {
+    const momNorm = symbol.rsi_14;
+    const volNorm = Math.max(0, 100 - symbol.volatility_30d * 2.2);
+    const sharpeNorm = Math.min(100, Math.max(0, symbol.sharpe_proxy * 35));
+    const revNorm = Math.max(0, (1 - symbol.bollinger_pct_b) * 100);
+    return (
+      Math.round(
+        ((momNorm * 35 + volNorm * 25 + sharpeNorm * 25 + revNorm * 15) / 100) * 10
+      ) / 10
+    );
+  }, [symbol]);
 
   // Dynamically evaluate regime matching true factor metrics
   const derivedRegime = useMemo(() => {
@@ -167,7 +168,6 @@ export const StockDossier: React.FC<StockDossierProps> = ({
           <RadialGauge
             score={alphaScore}
             label="COMPOSITE SCORE"
-            sublabel={derivedRegime}
             size={180}
           />
         </div>

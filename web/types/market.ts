@@ -112,3 +112,11 @@ export interface MarketTerminalPayload {
   correlation_matrix: CorrelationRow[];
   telemetry: TelemetryData;
 }
+
+// ============================================================
+// WATCHLIST
+// ============================================================
+export type WatchlistEntry = {
+  symbol: string;
+  pinnedAt: number; // Unix timestamp ms
+};

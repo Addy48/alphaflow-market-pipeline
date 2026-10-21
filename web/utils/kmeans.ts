@@ -101,7 +101,6 @@ export function runFactorKMeans(symbols: SymbolData[], k = 4): {
 
   // Deterministic initialization across factor percentiles (k-means++ style)
   const actualK = Math.min(k, symbols.length);
-  const initialIndices: number[] = [];
   
   // Pick extreme prototypes for stability:
   // 1. Highest Sharpe
@@ -131,8 +130,8 @@ export function runFactorKMeans(symbols: SymbolData[], k = 4): {
     }
   }
 
-  let centroids = uniqueInit.slice(0, actualK).map((idx) => [...vectors[idx]]);
-  let assignments = new Array(symbols.length).fill(0);
+  const centroids = uniqueInit.slice(0, actualK).map((idx) => [...vectors[idx]]);
+  const assignments = new Array(symbols.length).fill(0);
 
   // Lloyd's iteration
   const MAX_ITER = 40;

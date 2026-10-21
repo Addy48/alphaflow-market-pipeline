@@ -11,7 +11,8 @@ import {
   ShareNetwork,
   Cpu,
   SlidersHorizontal,
-  CirclesFour
+  CirclesFour,
+  SquaresFour
 } from "@phosphor-icons/react";
 import { MarketBreadth } from "../types/market";
 import { playTick } from "../utils/audio";
@@ -32,6 +33,7 @@ export const MacroBar: React.FC<MacroBarProps> = ({
     { id: "charts", label: "Technical Workspace", icon: ChartBar },
     { id: "correlation", label: "Cross-Market Matrix", icon: ShareNetwork },
     { id: "clusters", label: "K-Means Archetypes", icon: CirclesFour },
+    { id: "heatmap", label: "Sector Heatmap", icon: SquaresFour },
     { id: "lakehouse", label: "Lakehouse Observability", icon: Cpu },
   ];
 
@@ -121,8 +123,8 @@ export const MacroBar: React.FC<MacroBarProps> = ({
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex items-center gap-1.5 overflow-x-auto border-t border-[var(--divider)] pt-2.5 scrollbar-none font-mono">
+      {/* Tab Navigation — scrollable on mobile, min-w-max prevents truncation */}
+      <div className="flex items-center gap-1.5 overflow-x-auto border-t border-[var(--divider)] pt-2.5 scrollbar-none font-mono -mx-4 px-4">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -133,7 +135,7 @@ export const MacroBar: React.FC<MacroBarProps> = ({
                 playTick("click");
                 setActiveTab(tab.id);
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs transition whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs transition whitespace-nowrap min-w-max ${
                 isActive
                   ? "bg-[var(--surface-raised)] text-[var(--text-primary)] font-semibold border border-[var(--divider-strong)]"
                   : "bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] border border-transparent"
