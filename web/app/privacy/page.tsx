@@ -5,8 +5,8 @@ import { ArrowLeft, ShieldCheck } from "@phosphor-icons/react/dist/ssr";
 import { BrandLogo } from "../../components/BrandLogo";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | AlphaFlow Quantitative Platform",
-  description: "Factual privacy and data governance policy for the AlphaFlow quantitative terminal and factor mart.",
+  title: "Privacy Policy | BellCurve Data Quantitative Platform",
+  description: "Factual privacy and data governance policy for the BellCurve Data quantitative terminal and factor mart.",
   alternates: {
     canonical: "/privacy",
   },
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
             <div className="flex items-center gap-2">
               <BrandLogo size="sm" priority />
               <span className="font-bold text-xs uppercase tracking-wider text-[var(--text-primary)]">
-                AlphaFlow Governance
+                BellCurve Data Governance
               </span>
             </div>
           </div>
@@ -66,10 +66,10 @@ export default function PrivacyPage() {
         <article className="flex-1 space-y-8 text-xs leading-relaxed">
           <div>
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--text-primary)] mb-2">
-              AlphaFlow Privacy Policy
+              BellCurve Data Privacy Policy
             </h1>
             <p className="text-[var(--text-muted)] text-[11px]">
-              Factual data processing and privacy commitments for the AlphaFlow quantitative platform.
+              Factual data processing and privacy commitments for the BellCurve Data quantitative platform.
             </p>
           </div>
 
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
               <span className="text-[var(--accent)]">01.</span> Scope & Architecture
             </h2>
             <p className="text-[var(--text-secondary)] leading-relaxed">
-              AlphaFlow is an open-source quantitative market data engineering platform and factor mart spanning the US S&amp;P 500 and the Indian NSE NIFTY 50. The application is structured as a client-side analytical terminal powered by Next.js and static or serverless market partitions.
+              BellCurve Data is an open-source quantitative market data engineering platform and factor mart spanning the US S&amp;P 500 and the Indian NSE NIFTY 50. The application is structured as a client-side analytical terminal powered by Next.js and static or serverless market partitions.
             </p>
             <p className="text-[var(--text-secondary)] leading-relaxed">
               We do not operate third-party tracking pixels, marketing beacons, behavioral fingerprinting scripts, or cross-site advertising networks.

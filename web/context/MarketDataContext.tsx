@@ -266,7 +266,7 @@ export const MarketDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
     const link = document.createElement("a");
     link.href = jsonString;
-    link.download = `alphaflow_terminal_export_${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `bellcurve_export_${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -308,7 +308,7 @@ export const MarketDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.href = encodedUri;
-    link.download = `alphaflow_constituents_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `bellcurve_constituents_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();

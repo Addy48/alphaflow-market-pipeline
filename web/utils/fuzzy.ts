@@ -1,5 +1,5 @@
 /**
- * AlphaFlow Fuzzy Search Utility
+ * BellCurve Data Fuzzy Search Utility
  * Bigram-based fuzzy match scoring for Command Palette search
  */
 

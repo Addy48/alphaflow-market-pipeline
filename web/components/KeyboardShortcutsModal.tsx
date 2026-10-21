@@ -77,7 +77,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
               Terminal Keyboard Shortcuts
             </span>
             <span className="px-1.5 py-0.5 rounded bg-[var(--accent-dim)] text-[var(--accent)] border border-[var(--accent-border)] text-[9px] font-bold">
-              Bloomberg Std
+              Shortcuts
             </span>
           </div>
           <button

@@ -37,7 +37,7 @@ export const ExecutiveHero: React.FC<ExecutiveHeroProps> = ({
           </h1>
 
           <p className="text-xs sm:text-sm text-[var(--text-secondary)] font-mono leading-relaxed max-w-2xl">
-            AlphaFlow pairs a partitioned Medallion Lakehouse (S3 / Snappy Parquet / DuckDB / Athena) for daily batch historical factor marts with a serverless event-driven sentinel (AWS Lambda / DynamoDB / EventBridge / SNS) for real-time breakout alerting across the US S&amp;P 500 and the Indian NSE NIFTY 50.
+            BellCurve Data pairs a partitioned Medallion Lakehouse (S3 / Snappy Parquet / DuckDB / Athena) for daily batch historical factor marts with a serverless event-driven sentinel (AWS Lambda / DynamoDB / EventBridge / SNS) for real-time breakout alerting across the US S&amp;P 500 and the Indian NSE NIFTY 50.
           </p>
 
           {/* Primary & Secondary CTA Hierarchy */}
@@ -90,7 +90,7 @@ export const ExecutiveHero: React.FC<ExecutiveHeroProps> = ({
               <div className="text-[10px] text-[var(--text-muted)] uppercase">Contracts</div>
               <div className="text-sm font-bold text-[var(--risk-success)] tabular-nums mt-0.5 flex items-center gap-1">
                 <ShieldCheck size={13} weight="bold" />
-                <span>100% Validated</span>
+                <span>Checks in CI</span>
               </div>
               <div className="text-[10px] text-[var(--text-muted)]">Pandera Schemas</div>
             </div>
@@ -176,7 +176,7 @@ export const ExecutiveHero: React.FC<ExecutiveHeroProps> = ({
 
             <div className="mt-3 pt-2.5 border-t border-[var(--divider)] flex items-center justify-between text-[10px] text-[var(--text-muted)]">
               <span>Dual closing bell sync</span>
-              <span>Zero synthetic data fabrication</span>
+              <span>Simulated data is always labelled</span>
             </div>
           </div>
         </div>

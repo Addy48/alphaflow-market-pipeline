@@ -1,5 +1,5 @@
 /**
- * AlphaFlow Watchlist Manager
+ * BellCurve Data Watchlist Manager
  * Persists user-pinned symbols to localStorage under "alphaflow_watchlist"
  */
 

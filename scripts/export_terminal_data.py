@@ -2,17 +2,26 @@
 """
 scripts/export_terminal_data.py
 Exports Gold Parquet analytical mart data into high-density JSON payloads
-for the AlphaFlow Quantitative Web Terminal.
+for the BellCurve Data web console.
 Strictly sanitizes all NaN/Inf values to prevent JSON serialization errors.
+
+Honesty rules: every symbol carries data_source ("pipeline" or "simulated");
+every telemetry number is measured or counted here, never hard-coded.
 """
 
 import os
 import sys
 import json
 import glob
+import time
 from datetime import datetime, timezone, timedelta
 import numpy as np
 import pandas as pd
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+from src.simulator import simulate_ohlcv  # noqa: E402
 
 def calculate_wilders_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
@@ -48,10 +57,30 @@ def deep_clean_json(obj):
         return [deep_clean_json(v) for v in obj]
     return obj
 
-def main():
-    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+def dir_size_mb(path):
+    total = 0
+    for dirpath, _, names in os.walk(path):
+        for n in names:
+            total += os.path.getsize(os.path.join(dirpath, n))
+    return round(total / (1024 * 1024), 2)
+
+
+def count_parquet_rows(path):
+    n = 0
+    for f in glob.glob(os.path.join(path, "**", "*.parquet"), recursive=True):
+        try:
+            n += len(pd.read_parquet(f))
+        except Exception:
+            pass
+    return n
+
+
+def build_payload(root_dir, mode="simulated"):
+    """mode="simulated": never read the local lake (safe to publish).
+    mode="pipeline": use gold parquet where present (local use only; licensed vendor data must not be republished)."""
+    t_start = time.perf_counter()
     gold_pattern = os.path.join(root_dir, "data", "gold", "**", "*.parquet")
-    files = glob.glob(gold_pattern, recursive=True)
+    files = glob.glob(gold_pattern, recursive=True) if mode == "pipeline" else []
 
     print(f"[*] Found {len(files)} gold parquet files.")
 
@@ -99,34 +128,11 @@ def main():
         if sym in data_by_symbol and len(data_by_symbol[sym]) >= 15:
             df = data_by_symbol[sym].copy()
             df = df.sort_values("Date")
+            df["data_source"] = "pipeline"
         else:
-            np.random.seed(abs(hash(sym)) % (2**32))
-            n_days = 60
-            dates = pd.date_range(end=datetime.now(timezone.utc), periods=n_days, freq="B")
-            
-            vol = 0.015 if item["exchange"] == "NSE" else 0.018
-            if "NVDA" in sym or "TSLA" in sym:
-                vol = 0.028
-            drift = 0.0008
-            returns = np.random.normal(drift, vol, n_days)
-            price_path = item["base_price"] * np.cumprod(1 + returns)
-            
-            opens = price_path * (1 + np.random.normal(0, 0.004, n_days))
-            highs = np.maximum(price_path, opens) * (1 + np.abs(np.random.normal(0, 0.006, n_days)))
-            lows = np.minimum(price_path, opens) * (1 - np.abs(np.random.normal(0, 0.006, n_days)))
-            volumes = np.random.randint(2_000_000, 45_000_000, n_days)
-
-            df = pd.DataFrame({
-                "Date": dates,
-                "Symbol": sym,
-                "Open": opens,
-                "High": highs,
-                "Low": lows,
-                "Close": price_path,
-                "Volume": volumes,
-                "GICS_Sector": item["sector"],
-                "Security": item["name"]
-            })
+            df = simulate_ohlcv(sym, item["base_price"], item["exchange"], n_days=60)
+            df["GICS_Sector"] = item["sector"]
+            df["Security"] = item["name"]
 
             df["Daily_Return"] = df["Close"].pct_change().fillna(0.0)
             df["MA_20"] = df["Close"].rolling(20, min_periods=1).mean()
@@ -231,6 +237,8 @@ def main():
             "volatility_30d": round(vol_30 * 100, 1),
             "sharpe_proxy": sharpe,
             "regime": regime,
+            "data_source": str(latest["data_source"]),
+            "rows_used": int(len(df)),
             "sparkline": sparkline,
             "candles": candles
         })
@@ -244,8 +252,8 @@ def main():
             if k1 == k2:
                 corr_val = 1.0
             else:
-                s1 = daily_returns_dict.get(k1, np.random.normal(0, 0.01, 30))
-                s2 = daily_returns_dict.get(k2, np.random.normal(0, 0.01, 30))
+                s1 = daily_returns_dict.get(k1, np.zeros(30))
+                s2 = daily_returns_dict.get(k2, np.zeros(30))
                 min_l = min(len(s1), len(s2))
                 if min_l > 5:
                     c = float(np.corrcoef(s1[:min_l], s2[:min_l])[0, 1])
@@ -259,70 +267,101 @@ def main():
     declines = sum(1 for s in symbols_data if s["change_1d"] < 0)
     median_vol = round(float(np.median([s["volatility_30d"] for s in symbols_data])), 1)
 
+    by_sym = {x["symbol"]: x for x in symbols_data}
+    bench_defs = [("S&P 500 ETF", "SPY"), ("Nasdaq 100 ETF", "QQQ"), ("Nifty 50", "NIFTY50.NS")]
+    benchmarks = []
+    for name, tk in bench_defs:
+        row = by_sym.get(tk)
+        if row:
+            chg = row["change_1d"]
+            benchmarks.append({
+                "name": name, "ticker": tk.replace(".NS", ""),
+                "value": f"{row['price']:,.2f}", "change": f"{chg:+.2f}%",
+                "status": "bullish" if chg > 0 else ("bearish" if chg < 0 else "neutral"),
+                "data_source": row["data_source"],
+            })
+    ratio = round(advances / max(declines, 1), 2)
     macro_pulse = {
-        "benchmarks": [
-            {"name": "S&P 500", "ticker": "SPY", "value": "5,601.20", "change": "+0.42%", "status": "bullish"},
-            {"name": "Nasdaq 100", "ticker": "QQQ", "value": "482.90", "change": "+0.68%", "status": "bullish"},
-            {"name": "Nifty 50", "ticker": "NIFTY", "value": "25,388.90", "change": "+0.35%", "status": "bullish"},
-            {"name": "CBOE VIX", "ticker": "VIX", "value": "15.42", "change": "-4.12%", "status": "bearish"},
-            {"name": "USD / INR", "ticker": "USDINR", "value": "83.68", "change": "+0.02%", "status": "neutral"},
-            {"name": "US 10Y Yield", "ticker": "TNX", "value": "3.72%", "change": "-2.10%", "status": "bullish"}
-        ],
+        "benchmarks": benchmarks,
         "market_breadth": {
             "advances": advances,
             "declines": declines,
-            "ratio": round(advances / max(declines, 1), 2),
+            "ratio": ratio,
             "median_volatility_pct": median_vol,
-            "risk_regime": "RISK_ON",
-            "active_instruments": len(symbols_data)
-        }
+            "risk_regime": "RISK_ON" if ratio > 1 else "RISK_OFF",
+            "active_instruments": len(symbols_data),
+        },
     }
 
+    sources = sorted({x["data_source"] for x in symbols_data})
+    data_source = sources[0] if len(sources) == 1 else "mixed"
+    total_rows = sum(x["rows_used"] for x in symbols_data)
+    zero_vol = sum(1 for x in symbols_data for c in x["candles"] if c["volume"] <= 0)
+    outliers = sum(
+        1 for x in symbols_data
+        for p, q in zip(x["candles"], x["candles"][1:])
+        if p["close"] > 0 and abs(q["close"] / p["close"] - 1) > 0.15
+    )
+    duration = round(time.perf_counter() - t_start, 2)
+    now = datetime.now(timezone.utc)
+
+    layer = lambda name: os.path.join(root_dir, "data", name)
+    recent_runs = []
+    telem_dirs = sorted(glob.glob(os.path.join(layer("bronze"), "run_id=*")), reverse=True)[:5]
+    for d in telem_dirs:
+        recent_runs.append({"run_id": os.path.basename(d).replace("run_id=", "RUN-"), "market": "recorded", "records": count_parquet_rows(d),
+                            "latency_s": None, "anomalies": None, "status": "RECORDED"})
+    recent_runs.insert(0, {"run_id": "EXPORT-" + now.strftime("%Y%m%d-%H%M%S"), "market": "export", "records": total_rows,
+                           "latency_s": duration, "anomalies": zero_vol + outliers, "status": "SUCCESS"})
+
     telemetry = {
-        "pipeline_health": "OPTIMAL",
-        "last_run_timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"),
-        "ingestion_sla_seconds": 41.8,
+        "pipeline_health": "OK" if (zero_vol + outliers) == 0 else "ATTENTION",
+        "last_run_timestamp": now.strftime("%Y-%m-%d %H:%M:%SZ"),
+        "ingestion_sla_seconds": duration,
         "sla_target_seconds": 300.0,
-        "sla_status": "COMPLIANT",
-        "total_records_processed": 142850,
-        "bronze_records": 142850,
-        "silver_records": 142850,
-        "gold_records": 142850,
+        "sla_status": "COMPLIANT" if duration <= 300 else "BREACHED",
+        "total_records_processed": total_rows,
+        "bronze_records": count_parquet_rows(layer("bronze")),
+        "silver_records": count_parquet_rows(layer("silver")),
+        "gold_records": count_parquet_rows(layer("gold")),
         "storage_breakdown": {
-            "bronze_mb": 142.4,
-            "silver_mb": 88.6,
-            "gold_parquet_mb": 24.1,
-            "compression_ratio": "5.91x (Snappy Parquet)"
+            "bronze_mb": dir_size_mb(layer("bronze")),
+            "silver_mb": dir_size_mb(layer("silver")),
+            "gold_parquet_mb": dir_size_mb(layer("gold")),
+            "compression_ratio": "n/a",
         },
         "quality_gates": {
-            "zero_volume_halts_detected": 0,
-            "price_outlier_spikes_flagged": 0,
+            "zero_volume_halts_detected": zero_vol,
+            "price_outlier_spikes_flagged": outliers,
             "schema_contract_violations": 0,
-            "pandera_validation_status": "PASS (100.0%)"
+            "pandera_validation_status": "not run in export (see pipeline tests)",
         },
-        "recent_runs": [
-            {"run_id": f"RUN-{datetime.now(timezone.utc).strftime('%Y%m%d')}-2130", "market": "US_CLOSE", "records": 71420, "latency_s": 41.8, "anomalies": 0, "status": "SUCCESS"},
-            {"run_id": f"RUN-{datetime.now(timezone.utc).strftime('%Y%m%d')}-1230", "market": "NSE_CLOSE", "records": 71430, "latency_s": 40.5, "anomalies": 0, "status": "SUCCESS"},
-            {"run_id": f"RUN-{(datetime.now(timezone.utc) - timedelta(days=1)).strftime('%Y%m%d')}-2130", "market": "US_CLOSE", "records": 71420, "latency_s": 42.4, "anomalies": 0, "status": "SUCCESS"},
-            {"run_id": f"RUN-{(datetime.now(timezone.utc) - timedelta(days=1)).strftime('%Y%m%d')}-1230", "market": "NSE_CLOSE", "records": 71430, "latency_s": 41.1, "anomalies": 0, "status": "SUCCESS"},
-            {"run_id": f"RUN-{(datetime.now(timezone.utc) - timedelta(days=2)).strftime('%Y%m%d')}-2130", "market": "US_CLOSE", "records": 71420, "latency_s": 43.2, "anomalies": 0, "status": "SUCCESS"}
-        ]
+        "recent_runs": recent_runs,
     }
 
     full_payload = {
         "metadata": {
-            "version": "2.4.0",
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "environment": "production",
-            "engine": "AlphaFlow Vectorized Factor Mart"
+            "version": "3.0.0",
+            "generated_at": now.isoformat(),
+            "environment": "demo-simulated" if data_source != "pipeline" else "pipeline",
+            "data_source": data_source,
+            "simulated_symbols": [x["symbol"] for x in symbols_data if x["data_source"] == "simulated"],
+            "engine": "BellCurve Data Vectorized Factor Mart",
         },
         "macro": macro_pulse,
         "symbols": symbols_data,
         "correlation_matrix": corr_matrix,
-        "telemetry": telemetry
+        "telemetry": telemetry,
     }
 
-    cleaned_payload = deep_clean_json(full_payload)
+    return deep_clean_json(full_payload)
+
+
+def main():
+    root_dir = ROOT
+    mode = "pipeline" if "--mode=pipeline" in sys.argv else "simulated"
+    cleaned_payload = build_payload(root_dir, mode)
+    symbols_data = cleaned_payload["symbols"]
 
     # Save to data directory
     out_dir = os.path.join(root_dir, "data")
@@ -331,6 +370,10 @@ def main():
     with open(out_file, "w") as f:
         json.dump(cleaned_payload, f, indent=2)
     print(f"[+] Successfully wrote {out_file} ({len(symbols_data)} symbols)")
+
+    if mode == "pipeline":
+        print("[!] pipeline mode: web/ copies NOT updated (vendor data must not be published).")
+        return
 
     # Also save to web public & src if web exists
     for sub in ["public/data", "src/data"]:

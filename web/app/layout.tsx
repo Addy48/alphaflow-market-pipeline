@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CookieConsent } from "../components/CookieConsent";
+import { DataSourceBanner } from "../components/DataSourceBanner";
 import { MarketDataProvider } from "../context/MarketDataContext";
 
 const geistSans = Geist({
@@ -17,8 +18,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://alphaflow-terminal.vercel.app"),
   title: {
-    default: "AlphaFlow Terminal | Dual-Exchange Quantitative Factor Mart",
-    template: "%s | AlphaFlow Terminal",
+    default: "BellCurve Data | Market-Close Data Pipeline Lab",
+    template: "%s | BellCurve Data",
   },
   description:
     "Enterprise quantitative market data platform. Multi-exchange Snappy Parquet ingestion across S&P 500 and NIFTY 50, Pandera data contracts, and lakehouse observability.",
@@ -29,28 +30,27 @@ export const metadata: Metadata = {
     "NIFTY 50",
     "Pandera data contracts",
     "medallion lakehouse",
-    "Bloomberg terminal",
     "RSI",
     "Bollinger Bands",
     "financial engineering",
   ],
-  authors: [{ name: "AlphaFlow Engineering" }],
-  creator: "AlphaFlow",
+  authors: [{ name: "BellCurve Data" }],
+  creator: "BellCurve Data",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "AlphaFlow Terminal | Dual-Exchange Quantitative Factor Mart",
+    title: "BellCurve Data | Market-Close Data Pipeline Lab",
     description:
       "Enterprise quantitative market data platform. Multi-exchange Snappy Parquet ingestion across S&P 500 and NIFTY 50, Pandera data contracts, and lakehouse observability.",
     url: "https://alphaflow-terminal.vercel.app",
-    siteName: "AlphaFlow Quantitative Terminal",
+    siteName: "BellCurve Data",
     images: [
       {
         url: "/brand/alphaflow_logo_dark.png",
         width: 1200,
         height: 630,
-        alt: "AlphaFlow Quantitative Terminal",
+        alt: "BellCurve Data",
       },
     ],
     locale: "en_US",
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "AlphaFlow Terminal | Dual-Exchange Quantitative Factor Mart",
+    title: "BellCurve Data | Market-Close Data Pipeline Lab",
     description:
       "Enterprise quantitative market data platform. Multi-exchange ingestion across S&P 500 and NIFTY 50, Pandera contracts, and lakehouse observability.",
     images: ["/brand/alphaflow_logo_dark.png"],
@@ -91,6 +91,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-[var(--canvas)] text-[var(--text-primary)] antialiased font-mono overflow-x-hidden`}
       >
         <MarketDataProvider>
+          <DataSourceBanner />
           {children}
           <CookieConsent />
         </MarketDataProvider>

@@ -20,7 +20,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       <div className={`relative inline-flex items-center justify-center shrink-0 ${className}`}>
         <Image
           src="/brand/alphaflow_logo_dark.png"
-          alt="AlphaFlow"
+          alt="BellCurve Data"
           width={dim}
           height={dim}
           priority={priority}
@@ -28,7 +28,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         />
         <Image
           src="/brand/alphaflow_logo_light.png"
-          alt="AlphaFlow"
+          alt="BellCurve Data"
           width={dim}
           height={dim}
           priority={priority}
@@ -46,7 +46,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
     <div className={`relative inline-flex items-center shrink-0 ${className}`}>
       <Image
         src="/brand/alphaflow_logo_dark_transparent.png"
-        alt="AlphaFlow Quantitative Intelligence"
+        alt="BellCurve Data"
         width={width}
         height={height}
         priority={priority}
@@ -54,7 +54,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       />
       <Image
         src="/brand/alphaflow_logo_light_transparent.png"
-        alt="AlphaFlow Quantitative Intelligence"
+        alt="BellCurve Data"
         width={width}
         height={height}
         priority={priority}

@@ -1,5 +1,5 @@
 /**
- * AlphaFlow Quantitative K-Means Factor Clustering Engine
+ * BellCurve Data Quantitative K-Means Factor Clustering Engine
  * 
  * Partitions equities across a 4-dimensional normalized factor space:
  * 1. Momentum (RSI-14)

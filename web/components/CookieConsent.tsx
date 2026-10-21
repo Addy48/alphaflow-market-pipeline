@@ -97,7 +97,7 @@ export const CookieConsent: React.FC = () => {
         </div>
 
         <p className="text-[11px] text-[var(--text-muted)] leading-relaxed mb-3">
-          AlphaFlow uses client-side local storage exclusively for your active symbol watchlist, interface theme, and audio preferences. No third-party marketing cookies or tracker scripts are loaded.
+          BellCurve Data uses client-side local storage exclusively for your active symbol watchlist, interface theme, and audio preferences. No third-party marketing cookies or tracker scripts are loaded.
         </p>
 
         {showPreferences && (

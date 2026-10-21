@@ -5,8 +5,8 @@ import { ArrowLeft, Scales } from "@phosphor-icons/react/dist/ssr";
 import { BrandLogo } from "../../components/BrandLogo";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions | AlphaFlow Quantitative Platform",
-  description: "Terms of service, open-source licensing, and quantitative research disclaimers for AlphaFlow.",
+  title: "Terms & Conditions | BellCurve Data Quantitative Platform",
+  description: "Terms of service, open-source licensing, and quantitative research disclaimers for BellCurve Data.",
   alternates: {
     canonical: "/terms",
   },
@@ -66,7 +66,7 @@ export default function TermsPage() {
         <article className="flex-1 space-y-8 text-xs leading-relaxed">
           <div>
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[var(--text-primary)] mb-2">
-              AlphaFlow Terms &amp; Conditions
+              BellCurve Data Terms &amp; Conditions
             </h1>
             <p className="text-[var(--text-muted)] text-[11px]">
               Legal governance, software license boundaries, and regulatory disclaimers.
@@ -79,7 +79,7 @@ export default function TermsPage() {
               <span className="text-[var(--accent)]">01.</span> MIT Open-Source Licensing
             </h2>
             <p className="text-[var(--text-secondary)] leading-relaxed">
-              AlphaFlow is open-source software provided under the terms of the MIT License. The full code repository, lakehouse transform engine, and terminal frontend are made available freely for research, academic evaluation, and software development.
+              BellCurve Data is open-source software provided under the terms of the MIT License. The full code repository, lakehouse transform engine, and terminal frontend are made available freely for research, academic evaluation, and software development.
             </p>
             <div className="p-3 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] font-mono text-[10px] text-[var(--text-muted)] leading-normal">
               THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY.
@@ -92,7 +92,7 @@ export default function TermsPage() {
               <span className="text-rose-400">02.</span> Non-Advisory &amp; Regulatory Status
             </h2>
             <p className="text-[var(--text-secondary)] leading-relaxed">
-              AlphaFlow is NOT a registered investment advisor, broker-dealer, commodity trading advisor, or financial intermediary under the jurisdiction of the United States Securities and Exchange Commission (SEC), the Financial Industry Regulatory Authority (FINRA), or the Securities and Exchange Board of India (SEBI).
+              BellCurve Data is NOT a registered investment advisor, broker-dealer, commodity trading advisor, or financial intermediary under the jurisdiction of the United States Securities and Exchange Commission (SEC), the Financial Industry Regulatory Authority (FINRA), or the Securities and Exchange Board of India (SEBI).
             </p>
             <p className="text-[var(--text-secondary)] leading-relaxed">
               Nothing displayed on this terminal—including alpha scores, momentum indicators, technical regimes, tear-sheets, or AI Analyst summaries—constitutes personalized financial advice, investment recommendations, or an offer to buy or sell securities.
@@ -128,7 +128,7 @@ export default function TermsPage() {
               <span className="text-amber-500">05.</span> Deployer Legal Entity Placeholders
             </h2>
             <p className="text-[var(--text-secondary)] leading-relaxed">
-              The following contractual terms must be filled by the host entity deploying a commercial or private instance of AlphaFlow:
+              The following contractual terms must be filled by the host entity deploying a commercial or private instance of BellCurve Data:
             </p>
             <div className="p-3 rounded border border-amber-800/40 bg-black/40 space-y-1.5 text-[11px]">
               <div><strong className="text-amber-400">[TODO: Operating Entity Name]</strong> — Legal entity maintaining this terminal instance.</div>

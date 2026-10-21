@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
             href="/"
             onClick={() => playTick("click")}
             className="flex items-center gap-2 group cursor-pointer focus:outline-none"
-            title="AlphaFlow Quantitative Intelligence"
+            title="BellCurve Data"
           >
             <div className="w-7 h-7 rounded border border-[var(--divider)] bg-[var(--surface-subtle)] flex items-center justify-center p-0.5 shadow-2xs group-hover:border-[var(--accent-border)] transition">
               <BrandLogo variant="icon" size="sm" priority />

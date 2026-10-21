@@ -69,7 +69,7 @@ export const InstitutionalReportModal: React.FC<InstitutionalReportModalProps> =
   // Deterministic Cryptographic Docket Hash
   const docketMetadata = useMemo(() => {
     const timestamp = marketData.metadata?.generated_at || new Date().toISOString();
-    const raw = `${marketData.metadata?.version || "2.4"}_${symbols.length}_${marketData.telemetry?.ingestion_sla_seconds || 41.8}_${timestamp}`;
+    const raw = `${marketData.metadata?.version || "2.4"}_${symbols.length}_${marketData.telemetry?.ingestion_sla_seconds || 0}_${timestamp}`;
     let hash = 0;
     for (let i = 0; i < raw.length; i++) {
       hash = (hash << 5) - hash + raw.charCodeAt(i);
@@ -167,7 +167,7 @@ export const InstitutionalReportModal: React.FC<InstitutionalReportModalProps> =
             <div className="w-8 h-8 rounded border border-[var(--divider)] bg-[var(--surface)] flex items-center justify-center p-0.5 shadow-xs overflow-hidden">
               <Image
                 src={isDark ? "/brand/alphaflow_logo_dark.png" : "/brand/alphaflow_logo_light.png"}
-                alt="AlphaFlow"
+                alt="BellCurve Data"
                 width={28}
                 height={28}
                 className="w-full h-full object-contain"
@@ -175,7 +175,7 @@ export const InstitutionalReportModal: React.FC<InstitutionalReportModalProps> =
             </div>
             <div>
               <div className="text-xs font-black uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
-                <span>AlphaFlow Institutional Dossier</span>
+                <span>BellCurve Data Institutional Dossier</span>
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                   SEC 17a-4 / FINRA 4511
                 </span>
@@ -269,10 +269,10 @@ export const InstitutionalReportModal: React.FC<InstitutionalReportModalProps> =
             <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800 pb-3">
               <div className="flex items-start gap-3.5">
                 <div className="w-10 h-10 rounded border border-slate-700 bg-black flex items-center justify-center p-1 shadow-sm shrink-0 print:hidden">
-                  <Image src="/brand/alphaflow_logo_dark.png" alt="AlphaFlow" width={36} height={36} className="w-full h-full object-contain" />
+                  <Image src="/brand/alphaflow_logo_dark.png" alt="BellCurve Data" width={36} height={36} className="w-full h-full object-contain" />
                 </div>
                 <div className="w-10 h-10 rounded border border-slate-300 bg-white items-center justify-center p-1 shadow-sm shrink-0 hidden print:flex">
-                  <Image src="/brand/alphaflow_logo_light.png" alt="AlphaFlow" width={36} height={36} className="w-full h-full object-contain" />
+                  <Image src="/brand/alphaflow_logo_light.png" alt="BellCurve Data" width={36} height={36} className="w-full h-full object-contain" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -313,7 +313,7 @@ export const InstitutionalReportModal: React.FC<InstitutionalReportModalProps> =
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] pt-1">
               <div className="p-2 rounded bg-slate-800/80 border border-slate-700/60">
                 <div className="text-slate-400 text-[9px] uppercase font-bold">Pipeline Engine</div>
-                <div className="font-black text-cyan-300 mt-0.5">{marketData.metadata?.engine || "AlphaFlow Factor Mart"}</div>
+                <div className="font-black text-cyan-300 mt-0.5">{marketData.metadata?.engine || "BellCurve Data Factor Mart"}</div>
                 <div className="text-slate-400 text-[8px] mt-0.5">Version {marketData.metadata?.version || "2.4.0"}</div>
               </div>
               <div className="p-2 rounded bg-slate-800/80 border border-slate-700/60">
@@ -398,7 +398,7 @@ export const InstitutionalReportModal: React.FC<InstitutionalReportModalProps> =
               <div className="p-2.5 rounded bg-[var(--surface)] print:bg-white border border-[var(--divider)] print:border-slate-300">
                 <div className="text-[9px] text-[var(--text-muted)] uppercase font-semibold">S&amp;P 500 Benchmark</div>
                 <div className="text-sm font-black text-[var(--text-primary)] print:text-slate-900 mt-0.5">
-                  {marketData.macro?.benchmarks?.find((b) => b.ticker === "SPY")?.value || "5,601.20"}
+                  {marketData.macro?.benchmarks?.find((b) => b.ticker === "SPY")?.value || "n/a"}
                 </div>
                 <div className="text-[8px] text-emerald-600 dark:text-emerald-400 print:text-emerald-700 font-bold mt-0.5">
                   {marketData.macro?.benchmarks?.find((b) => b.ticker === "SPY")?.change || "+0.42%"}
@@ -779,7 +779,7 @@ export const InstitutionalReportModal: React.FC<InstitutionalReportModalProps> =
               <div className="p-2.5 rounded bg-[var(--surface)] print:bg-white border border-[var(--divider)] print:border-slate-300">
                 <div className="text-[9px] text-[var(--text-muted)] uppercase font-semibold">Ingestion SLA Latency</div>
                 <div className="text-sm font-black text-emerald-600 dark:text-emerald-400 print:text-emerald-700 mt-0.5">
-                  {(marketData.telemetry?.ingestion_sla_seconds || 41.8).toFixed(1)}s
+                  {(marketData.telemetry?.ingestion_sla_seconds || 0).toFixed(1)}s
                 </div>
                 <div className="text-[8px] text-[var(--text-muted)] mt-0.5">
                   Target: &lt;{marketData.telemetry?.sla_target_seconds || 300}s ({marketData.telemetry?.sla_status || "NOMINAL"})
@@ -812,7 +812,7 @@ export const InstitutionalReportModal: React.FC<InstitutionalReportModalProps> =
                 Domain VI: Regulatory Compliance Attestation &amp; Cryptographic Audit Ledger
               </div>
               <p className="text-[10px] text-[var(--text-secondary)] print:text-slate-600 mt-1 leading-relaxed">
-                This document represents an authoritative quantitative market intelligence dossier produced by the AlphaFlow non-discretionary algorithmic research engine. Pursuant to SEC Rule 17a-4 and FINRA Rule 4511 requirements for electronic records management, all source tick records, engineered factor columns, and unsupervised model matrices are persisted immutably in Write-Once-Read-Many (WORM) S3 lakehouse storage with Pandera schema verification.
+                This document represents an authoritative quantitative market intelligence dossier produced by the BellCurve Data non-discretionary algorithmic research engine. Pursuant to SEC Rule 17a-4 and FINRA Rule 4511 requirements for electronic records management, all source tick records, engineered factor columns, and unsupervised model matrices are persisted immutably in Write-Once-Read-Many (WORM) S3 lakehouse storage with Pandera schema verification.
               </p>
             </div>
 
@@ -821,7 +821,7 @@ export const InstitutionalReportModal: React.FC<InstitutionalReportModalProps> =
               <div className="p-3 rounded bg-[var(--surface)] print:bg-white border border-[var(--divider)] print:border-slate-300 flex flex-col justify-between h-28">
                 <div>
                   <div className="text-[9px] text-[var(--text-muted)] uppercase font-bold">Quantitative Engine Attestation</div>
-                  <div className="text-xs font-black text-[var(--text-primary)] print:text-slate-900 mt-1">AlphaFlow Core Execution Engine · Node AF-NODE-01</div>
+                  <div className="text-xs font-black text-[var(--text-primary)] print:text-slate-900 mt-1">BellCurve Data Core Execution Engine · Node AF-NODE-01</div>
                   <div className="text-[9px] text-[var(--text-muted)] mt-0.5">Autonomous Algorithmic Research &amp; Execution Pipeline</div>
                 </div>
                 <div className="flex items-center justify-between text-[9px] text-[var(--text-muted)] pt-2 border-t border-[var(--divider)] print:border-slate-200">
@@ -847,7 +847,7 @@ export const InstitutionalReportModal: React.FC<InstitutionalReportModalProps> =
             <div className="pt-3 border-t border-[var(--divider)] print:border-slate-300 flex flex-wrap items-center justify-between text-[9px] text-[var(--text-muted)] print:text-slate-500 gap-2">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck size={14} weight="bold" className="text-emerald-600 dark:text-emerald-400 print:text-emerald-700" />
-                <span>AlphaFlow Quantitative Lakehouse — Pandera Data Contract Verified (Zero Anomalies)</span>
+                <span>BellCurve Data Quantitative Lakehouse — Pandera Data Contract Verified (Zero Anomalies)</span>
               </div>
               <div className="font-mono">
                 HASH: {docketMetadata.fullHash} · FOR INSTITUTIONAL USE ONLY

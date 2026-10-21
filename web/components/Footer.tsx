@@ -39,7 +39,7 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="flex items-center gap-2">
               <BrandLogo variant="icon" size="sm" />
               <span className="font-bold text-xs uppercase tracking-wider text-[var(--text-primary)]">
-                AlphaFlow Platform
+                BellCurve Data Platform
               </span>
             </div>
             <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
@@ -161,7 +161,7 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Legal Disclaimer Box */}
         <div className="pt-4 border-t border-[var(--divider)] text-[10px] text-[var(--text-muted)] leading-relaxed space-y-1">
           <p>
-            <strong className="text-[var(--text-secondary)]">Regulatory Disclaimer:</strong> AlphaFlow is an open-source quantitative market data engineering platform provided strictly for research, engineering, and algorithmic educational purposes. AlphaFlow is not a registered investment advisor, broker-dealer, or commodity trading advisor under the jurisdiction of the US SEC, FINRA, or SEBI India.
+            <strong className="text-[var(--text-secondary)]">Regulatory Disclaimer:</strong> BellCurve Data is an open-source quantitative market data engineering platform provided strictly for research, engineering, and algorithmic educational purposes. BellCurve Data is not a registered investment advisor, broker-dealer, or commodity trading advisor under the jurisdiction of the US SEC, FINRA, or SEBI India.
           </p>
           <p>
             Technical factor outputs (RSI-14, Bollinger %B, Sharpe Proxy, Realized Volatility) are computed deterministically from publicly reported closing prints. Nothing displayed on this platform constitutes personalized financial advice, investment recommendations, or an offer to buy or sell securities.
@@ -171,7 +171,7 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Bottom Utility Bar */}
         <div className="pt-3 border-t border-[var(--divider)] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
           <div className="flex items-center gap-3">
-            <span>© 2026 AlphaFlow Engineering</span>
+            <span>© 2026 BellCurve Data</span>
             <span>•</span>
             <span>MIT Open Source</span>
             <span>•</span>

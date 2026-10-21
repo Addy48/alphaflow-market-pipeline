@@ -201,7 +201,7 @@ export const MacroContextPanel: React.FC<MacroContextPanelProps> = ({
         {/* Footer */}
         <div className="p-2.5 border-t border-[var(--divider)] bg-[var(--surface-subtle)] text-[10px] text-[var(--text-muted)] flex items-center justify-between font-mono flex-shrink-0">
           <span>Press M or ESC to dismiss</span>
-          <span>AlphaFlow Macro</span>
+          <span>BellCurve Data Macro</span>
         </div>
       </div>
     </>

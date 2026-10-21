@@ -21,7 +21,7 @@ export default function NotFound() {
             <div className="flex items-center gap-2">
               <BrandLogo size="sm" priority />
               <span className="font-bold text-xs uppercase tracking-wider text-[var(--text-primary)]">
-                AlphaFlow Routing
+                BellCurve Data Routing
               </span>
             </div>
           </div>

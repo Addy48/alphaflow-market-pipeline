@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       regime: s.regime,
     }));
 
-    const systemPrompt = `You are AlphaFlow's institutional quantitative analyst with access to real-time factor data for ${compactSymbols.length} equities (US S&P 500 + NSE Nifty 50).
+    const systemPrompt = `You are BellCurve Data's institutional quantitative analyst with access to real-time factor data for ${compactSymbols.length} equities (US S&P 500 + NSE Nifty 50).
 
 You analyze: RSI-14, Bollinger %B, 30D Annualized Volatility, Sharpe Proxy (vs 4.5% risk-free), MACD, and market regime.
 

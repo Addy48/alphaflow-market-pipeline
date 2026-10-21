@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
         "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
         "Pragma": "no-cache",
         "Expires": "0",
-        "X-AlphaFlow-Sync-Time": new Date().toISOString(),
+        "X-BellCurve-Sync-Time": new Date().toISOString(),
       },
     });
   } catch (error) {

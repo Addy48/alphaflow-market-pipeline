@@ -102,6 +102,8 @@ export interface MarketTerminalPayload {
     version: string;
     generated_at: string;
     environment: string;
+    data_source: "simulated" | "pipeline" | "mixed";
+    simulated_symbols: string[];
     engine: string;
   };
   macro: {
